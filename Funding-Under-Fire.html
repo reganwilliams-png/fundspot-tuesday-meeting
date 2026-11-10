@@ -1689,12 +1689,17 @@ function raidWave() {
   }
   raid.form = { x: 16, y: 12, dir: 1, cols: cols, rows: rows, cells: cells };
 }
+function raidPace() {
+  const t = Math.max(0, Math.min(1, (30 - raid.left) / 30));
+  return { vx: 18 + t * t * 120, drop: 6 + t * 20 };
+}
 function raidLayout(w) {
   const gapX = 8;
-  const gapY = 8;
-  const fit = Math.floor((w - 24 - gapX * (raid.form.cols - 1)) / raid.form.cols);
-  const cellW = Math.max(48, fit);
-  return { cellW: cellW, cellH: cellW < 110 ? 36 : 42, gapX: gapX, gapY: gapY };
+  const gapY = 10;
+  const travel = Math.max(72, Math.min(200, Math.floor(w * 0.18)));
+  const fit = Math.floor((w - 16 - travel - gapX * (raid.form.cols - 1)) / raid.form.cols);
+  const cellW = Math.max(24, fit);
+  return { cellW: cellW, cellH: cellW < 100 ? 44 : 52, gapX: gapX, gapY: gapY };
 }
 function raidRects(w) {
   const box = raidLayout(w);
@@ -1798,16 +1803,18 @@ function stepRaid(now) {
   raid.bullets.forEach(function (bullet) { bullet.y -= 560 * dt; });
   raid.bullets = raid.bullets.filter(function (bullet) { return bullet.y > -10; });
   const box = raidLayout(w);
+  const pace = raidPace();
   const span = raid.form.cols * (box.cellW + box.gapX);
-  raid.form.x += raid.form.dir * (78 + raid.wave * 18) * dt;
-  if (raid.form.x < 8) {
+  const room = w - 16 - span;
+  if (room > 12) raid.form.x += raid.form.dir * pace.vx * dt;
+  if (room > 12 && raid.form.x < 8) {
     raid.form.x = 8;
     raid.form.dir = 1;
-    raid.form.y += 18;
-  } else if (raid.form.x + span > w - 8) {
+    raid.form.y += pace.drop;
+  } else if (room > 12 && raid.form.x + span > w - 8) {
     raid.form.x = w - 8 - span;
     raid.form.dir = -1;
-    raid.form.y += 18;
+    raid.form.y += pace.drop;
   }
   const floor = h - 78;
   raidRects(w).forEach(function (rect) {
@@ -1869,7 +1876,7 @@ function drawRaid(canvas, w, h) {
   raid.bullets.forEach(function (bullet) {
     ctx.fillRect(bullet.x - 2, bullet.y, 4, 12);
   });
-  ctx.font = "12px Bahnschrift, Segoe UI, sans-serif";
+  ctx.font = (raidLayout(w).cellW < 110 ? 14 : 16) + "px Bahnschrift, Segoe UI, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   raidRects(w).forEach(function (rect) {
