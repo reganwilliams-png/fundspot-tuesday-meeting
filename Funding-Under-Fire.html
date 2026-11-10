@@ -557,13 +557,49 @@
   }
   @media (max-width: 720px) {
     body { overflow: auto; }
+    #app { height: auto; min-height: 100%; }
     .screen, .screen.play { height: auto; min-height: 100%; max-height: none; overflow: visible; }
-    .hero { padding: 24px 16px 48px; }
+    .hero { padding: 20px 16px max(28px, env(safe-area-inset-bottom)); }
     .clockface, .launch, .objective { flex-direction: column; align-items: stretch; }
     .launch button, .roles button { width: 100%; }
     .objective .sel { text-align: left; }
-    .stage { min-height: 70vh; }
-    .raid-stage { min-height: 68vh; }
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      background: rgba(7, 17, 28, 0.96);
+      padding-top: max(8px, env(safe-area-inset-top));
+      padding-bottom: 8px;
+    }
+    .controls { justify-content: flex-start; }
+    .controls button,
+    .actionbar button,
+    .dock .btns button,
+    .modal .btns button,
+    .msg button,
+    button.mini,
+    .frag,
+    .options button.opt { min-height: 44px; }
+    .roles { display: grid; grid-template-columns: 1fr 1fr; }
+    .roles.speeds { grid-template-columns: 1fr 1fr 1fr; }
+    .roles button { min-width: 0; width: 100%; min-height: 52px; }
+    .screen.play { display: block; }
+    .stage { display: block; height: auto; flex: none; min-height: 0; overflow: visible; }
+    .panel, .board, .matrix, .slots { height: auto; flex: none; overflow: visible; }
+    .board, .matrix { grid-template-rows: auto auto; }
+    .pile, .zone-cards, .bank, .msg { overflow: visible; flex: none; }
+    .zone { min-height: 96px; }
+    .slots .zone { flex: none; min-height: 72px; }
+    .actionbar, .dock {
+      position: relative;
+      z-index: 6;
+      margin-bottom: 0;
+      flex-wrap: wrap;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    .pauseveil { position: fixed; z-index: 8; }
+    .modal { position: fixed; z-index: 10; }
+    .raid-stage { min-height: 62vh; margin-bottom: max(14px, env(safe-area-inset-bottom)); }
     h1 { font-size: clamp(36px, 12vw, 56px); }
   }
 </style>
@@ -1163,7 +1199,9 @@ function renderBrief() {
     "<div class=\"roles\" role=\"group\" aria-label=\"Choose who you are\">" + roles + "</div>" +
     "<p class=\"quiet\">" + esc(desk) + "</p>" +
     "<p class=\"quiet\" style=\"margin-top:14px\">Clock speed</p>" +
-    "<div class=\"roles\" role=\"group\" aria-label=\"Clock speed\">" + speeds + "</div>" +
+    "<div class=\"roles speeds\" role=\"group\" aria-label=\"Clock speed\">" + speeds + "</div>" +
+    "<div class=\"launch\"><button class=\"primary\" type=\"button\" id=\"start\"" + (who ? "" : " disabled") + " style=\"min-height:54px;padding:0 28px\">" + (who ? "Start as " + esc(who.name) : "Choose who you are") + "</button>" +
+    "<button type=\"button\" id=\"raidstart\" style=\"min-height:54px;padding:0 18px\">30-second raid</button></div>" +
     "<div class=\"clockface\"><strong>03:00</strong><div><b>" + (speed === 1 ? "One mission" : speed + "× clock") + "</b><div class=\"quiet\">The same three minutes on the clock. At " + speed + "× it is gone in " + fmt(180 / speed) + " of real time. It flashes, shakes, and sounds harder as it runs. Sound turns the alarm off. Steady turns the motion off.</div></div></div>" +
     "<div class=\"stamps\">" +
     "<div class=\"stamp\"><b>01 CHUNK</b><span>Sort the kind of work</span></div>" +
@@ -1171,8 +1209,6 @@ function renderBrief() {
     "<div class=\"stamp\"><b>03 SEQUENCE</b><span>What has to happen first</span></div>" +
     "<div class=\"stamp\"><b>04 ADAPT</b><span>The file hits back</span></div>" +
     "<div class=\"stamp\"><b>05 SAY IT</b><span>The next step, clearly</span></div></div>" +
-    "<div class=\"launch\"><button class=\"primary\" type=\"button\" id=\"start\"" + (who ? "" : " disabled") + " style=\"min-height:54px;padding:0 28px\">" + (who ? "Start as " + esc(who.name) : "Choose who you are") + "</button>" +
-    "<button type=\"button\" id=\"raidstart\" style=\"min-height:54px;padding:0 18px\">30-second raid</button></div>" +
     "<p class=\"quiet\">No typing. Click a card, then click where it goes. Drag works too.</p>" +
     "<p class=\"fine\">Exercise files. Not credit advice and not legal advice. A caveat is not a mortgage. A leased or third-party vehicle is not the borrower's security. Outside lenders here are Bizcap, Lumi and Capify.</p></div></div>";
 }
@@ -1268,6 +1304,10 @@ function render() {
   }
   app.innerHTML = html;
   state.justEntered = false;
+  if (render.phase !== state.phase) {
+    render.phase = state.phase;
+    window.scrollTo(0, 0);
+  }
   bind();
 }
 function applyChrome() {
@@ -1697,16 +1737,21 @@ function raidPace() {
   return { wait: 1.05 - t * 0.62, step: 10 + t * 8, drop: 8 + t * 6 };
 }
 function placeRaidBlocks(w) {
-  const bw = Math.min(170, Math.max(84, Math.floor((w - 72) / 3)));
-  const bh = 48;
+  const cols = w < 520 ? 2 : 3;
+  const gap = 14;
+  const bw = Math.min(220, Math.max(108, Math.floor((w - 20 - gap * (cols - 1)) / cols)));
+  const bh = w < 520 ? 56 : 48;
   raid.blocks.forEach(function (block) {
     if (block.placed) return;
-    const col = block.slot % 3;
-    const row = Math.floor(block.slot / 3);
+    const col = block.slot % cols;
+    const row = Math.floor(block.slot / cols);
+    const inRow = Math.min(cols, raid.blocks.length - row * cols);
+    const rowWidth = inRow * bw + (inRow - 1) * gap;
+    const rowShift = Math.max(8, Math.floor((w - rowWidth) / 2));
     block.w = bw;
     block.h = bh;
-    block.x = 20 + col * (bw + 24) + (row === 1 ? Math.floor((bw + 24) / 2) : 0);
-    block.y = 22 + row * (bh + 28);
+    block.x = rowShift + col * (bw + gap);
+    block.y = 46 + row * (bh + 16);
     block.placed = true;
   });
 }
@@ -1917,7 +1962,6 @@ function drawRaid(canvas, w, h) {
   raid.bullets.forEach(function (bullet) {
     ctx.fillRect(bullet.x - 2, bullet.y, 4, 12);
   });
-  ctx.font = "17px Consolas, Cascadia Mono, monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   raidRects().forEach(function (rect) {
@@ -1933,14 +1977,28 @@ function drawRaid(canvas, w, h) {
     ctx.fillRect(x, y + rect.h - 8, rect.w, 4);
     ctx.fillRect(x + (step ? 10 : 22), y + rect.h - 4, 10, 6);
     ctx.fillRect(x + rect.w - (step ? 20 : 32), y + rect.h - 4, 10, 6);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 8, y + 12, rect.w - 16, rect.h - 20);
+    ctx.clip();
     ctx.fillStyle = "#d8ffd2";
     const words = rect.cell.text.split(" ");
-    if (words.length > 2) {
-      ctx.fillText(words.slice(0, 2).join(" "), x + rect.w / 2, y + rect.h / 2 - 6);
-      ctx.fillText(words.slice(2).join(" "), x + rect.w / 2, y + rect.h / 2 + 10);
-    } else {
-      ctx.fillText(rect.cell.text, x + rect.w / 2, y + rect.h / 2 + 2);
+    const lines = words.length > 2
+      ? [words.slice(0, 2).join(" "), words.slice(2).join(" ")]
+      : [rect.cell.text];
+    let size = 16;
+    const maxW = rect.w - 20;
+    ctx.font = size + "px Consolas, Cascadia Mono, monospace";
+    while (size > 11 && lines.some(function (line) { return ctx.measureText(line).width > maxW; })) {
+      size -= 1;
+      ctx.font = size + "px Consolas, Cascadia Mono, monospace";
     }
+    if (lines.length === 1) ctx.fillText(lines[0], x + rect.w / 2, y + rect.h / 2 + 2);
+    else {
+      ctx.fillText(lines[0], x + rect.w / 2, y + rect.h / 2 - 8);
+      ctx.fillText(lines[1], x + rect.w / 2, y + rect.h / 2 + 10);
+    }
+    ctx.restore();
   });
   (raid.booms || []).forEach(function (boom) {
     const p = Math.min(1, boom.age / boom.life);
