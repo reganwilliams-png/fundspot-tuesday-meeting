@@ -1673,45 +1673,44 @@ function resetRaid() {
   raid.bannerT = 2;
   raid.last = 0;
   raid.wave = 0;
+  raid.stars = [];
+  for (let i = 0; i < 36; i++) raid.stars.push({ x: Math.random(), y: Math.random(), s: i % 7 === 0 ? 2 : 1 });
   raidWave();
 }
 function raidWave() {
-  const cols = 6;
-  const rows = 3;
-  const cells = [];
   raid.wave += 1;
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const shoot = (r + c + raid.wave) % 2 === 0;
-      const pool = shoot ? RAID_SHOOT : RAID_LEAVE;
-      cells.push({ c: c, r: r, text: pool[(r * cols + c + raid.wave) % pool.length], shoot: shoot, alive: true });
-    }
-  }
-  raid.form = { x: 16, y: 12, dir: 1, cols: cols, rows: rows, cells: cells };
+  const pick = [
+    { text: RAID_SHOOT[raid.wave % RAID_SHOOT.length], shoot: true },
+    { text: RAID_LEAVE[raid.wave % RAID_LEAVE.length], shoot: false },
+    { text: RAID_SHOOT[(raid.wave + 2) % RAID_SHOOT.length], shoot: true },
+    { text: RAID_LEAVE[(raid.wave + 3) % RAID_LEAVE.length], shoot: false },
+    { text: RAID_SHOOT[(raid.wave + 4) % RAID_SHOOT.length], shoot: true }
+  ];
+  raid.blocks = pick.map(function (item, i) {
+    return { text: item.text, shoot: item.shoot, alive: true, x: 0, y: 0, w: 140, h: 48, dir: i % 2 === 0 ? 1 : -1, slot: i, placed: false };
+  });
 }
 function raidPace() {
   const t = Math.max(0, Math.min(1, (30 - raid.left) / 30));
   return { vx: 18 + t * t * 120, drop: 6 + t * 20 };
 }
-function raidLayout(w) {
-  const gapX = 8;
-  const gapY = 10;
-  const travel = Math.max(72, Math.min(200, Math.floor(w * 0.18)));
-  const fit = Math.floor((w - 16 - travel - gapX * (raid.form.cols - 1)) / raid.form.cols);
-  const cellW = Math.max(24, fit);
-  return { cellW: cellW, cellH: cellW < 100 ? 44 : 52, gapX: gapX, gapY: gapY };
+function placeRaidBlocks(w) {
+  const bw = Math.min(170, Math.max(84, Math.floor((w - 72) / 3)));
+  const bh = 48;
+  raid.blocks.forEach(function (block) {
+    if (block.placed) return;
+    const col = block.slot % 3;
+    const row = Math.floor(block.slot / 3);
+    block.w = bw;
+    block.h = bh;
+    block.x = 20 + col * (bw + 24) + (row === 1 ? Math.floor((bw + 24) / 2) : 0);
+    block.y = 22 + row * (bh + 28);
+    block.placed = true;
+  });
 }
-function raidRects(w) {
-  const box = raidLayout(w);
-  const form = raid.form;
-  return form.cells.filter(function (cell) { return cell.alive; }).map(function (cell) {
-    return {
-      cell: cell,
-      x: form.x + cell.c * (box.cellW + box.gapX),
-      y: form.y + cell.r * (box.cellH + box.gapY),
-      w: box.cellW,
-      h: box.cellH
-    };
+function raidRects() {
+  return raid.blocks.filter(function (block) { return block.alive && block.placed; }).map(function (block) {
+    return { cell: block, x: block.x, y: block.y, w: block.w, h: block.h };
   });
 }
 function renderRaid() {
@@ -1802,22 +1801,23 @@ function stepRaid(now) {
   }
   raid.bullets.forEach(function (bullet) { bullet.y -= 560 * dt; });
   raid.bullets = raid.bullets.filter(function (bullet) { return bullet.y > -10; });
-  const box = raidLayout(w);
+  placeRaidBlocks(w);
   const pace = raidPace();
-  const span = raid.form.cols * (box.cellW + box.gapX);
-  const room = w - 16 - span;
-  if (room > 12) raid.form.x += raid.form.dir * pace.vx * dt;
-  if (room > 12 && raid.form.x < 8) {
-    raid.form.x = 8;
-    raid.form.dir = 1;
-    raid.form.y += pace.drop;
-  } else if (room > 12 && raid.form.x + span > w - 8) {
-    raid.form.x = w - 8 - span;
-    raid.form.dir = -1;
-    raid.form.y += pace.drop;
-  }
+  raid.blocks.forEach(function (block) {
+    if (!block.alive) return;
+    block.x += block.dir * pace.vx * dt;
+    if (block.x < 8) {
+      block.x = 8;
+      block.dir = 1;
+      block.y += pace.drop;
+    } else if (block.x + block.w > w - 8) {
+      block.x = w - 8 - block.w;
+      block.dir = -1;
+      block.y += pace.drop;
+    }
+  });
   const floor = h - 78;
-  raidRects(w).forEach(function (rect) {
+  raidRects().forEach(function (rect) {
     if (rect.y + rect.h < floor) return;
     rect.cell.alive = false;
     if (rect.cell.shoot) {
@@ -1833,7 +1833,7 @@ function stepRaid(now) {
   });
   raid.bullets.forEach(function (bullet) {
     if (bullet.dead) return;
-    raidRects(w).forEach(function (rect) {
+    raidRects().forEach(function (rect) {
       if (bullet.dead || !rect.cell.alive) return;
       if (bullet.x < rect.x || bullet.x > rect.x + rect.w || bullet.y < rect.y || bullet.y > rect.y + rect.h) return;
       bullet.dead = true;
@@ -1853,7 +1853,7 @@ function stepRaid(now) {
     });
   });
   raid.bullets = raid.bullets.filter(function (bullet) { return !bullet.dead; });
-  if (!raid.form.cells.some(function (cell) { return cell.alive; })) raidWave();
+  if (!raid.blocks.some(function (block) { return block.alive; })) raidWave();
   raid.bannerT = Math.max(0, raid.bannerT - dt);
   const flash = document.getElementById("raidflash");
   if (flash) flash.textContent = raid.bannerT > 0 ? raid.banner : "";
@@ -1861,39 +1861,47 @@ function stepRaid(now) {
 }
 function drawRaid(canvas, w, h) {
   const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "#07111c";
+  const step = Math.floor(Date.now() / 480) % 2;
+  ctx.fillStyle = "#02060c";
   ctx.fillRect(0, 0, w, h);
-  const shipX = raid.ship * w;
+  ctx.fillStyle = "rgba(232, 243, 255, 0.45)";
+  (raid.stars || []).forEach(function (star) {
+    ctx.fillRect(Math.floor(star.x * w), Math.floor(star.y * (h - 80)), star.s, star.s);
+  });
+  ctx.fillStyle = "#16301c";
+  ctx.fillRect(0, h - 36, w, 2);
+  const shipX = Math.floor(raid.ship * w);
   ctx.fillStyle = "#5ce1ff";
-  ctx.beginPath();
-  ctx.moveTo(shipX, h - 64);
-  ctx.lineTo(shipX - 16, h - 40);
-  ctx.lineTo(shipX + 16, h - 40);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillRect(shipX - 2, h - 70, 4, 10);
+  ctx.fillRect(shipX - 14, h - 58, 28, 8);
+  ctx.fillRect(shipX - 20, h - 50, 40, 6);
   ctx.fillStyle = "#ffc14d";
   raid.bullets.forEach(function (bullet) {
     ctx.fillRect(bullet.x - 2, bullet.y, 4, 12);
   });
-  ctx.font = (raidLayout(w).cellW < 110 ? 14 : 16) + "px Bahnschrift, Segoe UI, sans-serif";
+  ctx.font = "15px Consolas, Cascadia Mono, monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  raidRects(w).forEach(function (rect) {
-    ctx.fillStyle = "rgba(8, 22, 38, 0.94)";
-    ctx.strokeStyle = "rgba(140, 196, 255, 0.55)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 8);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#e8f3ff";
+  raidRects().forEach(function (rect) {
+    const x = Math.floor(rect.x);
+    const y = Math.floor(rect.y);
+    ctx.fillStyle = "#03140c";
+    ctx.fillRect(x + 6, y + 8, rect.w - 12, rect.h - 10);
+    ctx.fillStyle = "#39ff14";
+    ctx.fillRect(x + rect.w / 2 - 2, y, 4, 8);
+    ctx.fillRect(x, y + 8, rect.w, 4);
+    ctx.fillRect(x, y + 8, 4, rect.h - 12);
+    ctx.fillRect(x + rect.w - 4, y + 8, 4, rect.h - 12);
+    ctx.fillRect(x, y + rect.h - 8, rect.w, 4);
+    ctx.fillRect(x + (step ? 10 : 22), y + rect.h - 4, 10, 6);
+    ctx.fillRect(x + rect.w - (step ? 20 : 32), y + rect.h - 4, 10, 6);
+    ctx.fillStyle = "#d8ffd2";
     const words = rect.cell.text.split(" ");
     if (words.length > 2) {
-      ctx.fillText(words.slice(0, 2).join(" "), rect.x + rect.w / 2, rect.y + rect.h / 2 - 7);
-      ctx.fillText(words.slice(2).join(" "), rect.x + rect.w / 2, rect.y + rect.h / 2 + 8);
+      ctx.fillText(words.slice(0, 2).join(" "), x + rect.w / 2, y + rect.h / 2 - 6);
+      ctx.fillText(words.slice(2).join(" "), x + rect.w / 2, y + rect.h / 2 + 10);
     } else {
-      ctx.fillText(rect.cell.text, rect.x + rect.w / 2, rect.y + rect.h / 2);
+      ctx.fillText(rect.cell.text, x + rect.w / 2, y + rect.h / 2 + 2);
     }
   });
 }
