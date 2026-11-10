@@ -1672,6 +1672,7 @@ function resetRaid() {
   raid.banner = "Shoot urgent and important. Leave the rest.";
   raid.bannerT = 2;
   raid.last = 0;
+  raid.stepWait = 1.2;
   raid.wave = 0;
   raid.stars = [];
   for (let i = 0; i < 36; i++) raid.stars.push({ x: Math.random(), y: Math.random(), s: i % 7 === 0 ? 2 : 1 });
@@ -1692,7 +1693,7 @@ function raidWave() {
 }
 function raidPace() {
   const t = Math.max(0, Math.min(1, (30 - raid.left) / 30));
-  return { vx: 18 + t * t * 120, drop: 6 + t * 20 };
+  return { wait: 1.05 - t * 0.62, step: 10 + t * 8, drop: 8 + t * 6 };
 }
 function placeRaidBlocks(w) {
   const bw = Math.min(170, Math.max(84, Math.floor((w - 72) / 3)));
@@ -1802,20 +1803,24 @@ function stepRaid(now) {
   raid.bullets.forEach(function (bullet) { bullet.y -= 560 * dt; });
   raid.bullets = raid.bullets.filter(function (bullet) { return bullet.y > -10; });
   placeRaidBlocks(w);
-  const pace = raidPace();
-  raid.blocks.forEach(function (block) {
-    if (!block.alive) return;
-    block.x += block.dir * pace.vx * dt;
-    if (block.x < 8) {
-      block.x = 8;
-      block.dir = 1;
-      block.y += pace.drop;
-    } else if (block.x + block.w > w - 8) {
-      block.x = w - 8 - block.w;
-      block.dir = -1;
-      block.y += pace.drop;
-    }
-  });
+  raid.stepWait -= dt;
+  if (raid.stepWait <= 0 && dt > 0) {
+    const pace = raidPace();
+    raid.stepWait = pace.wait;
+    raid.blocks.forEach(function (block) {
+      if (!block.alive) return;
+      block.x += block.dir * pace.step;
+      if (block.x < 8) {
+        block.x = 8;
+        block.dir = 1;
+        block.y += pace.drop;
+      } else if (block.x + block.w > w - 8) {
+        block.x = w - 8 - block.w;
+        block.dir = -1;
+        block.y += pace.drop;
+      }
+    });
+  }
   const floor = h - 78;
   raidRects().forEach(function (rect) {
     if (rect.y + rect.h < floor) return;
@@ -1835,7 +1840,7 @@ function stepRaid(now) {
     if (bullet.dead) return;
     raidRects().forEach(function (rect) {
       if (bullet.dead || !rect.cell.alive) return;
-      if (bullet.x < rect.x || bullet.x > rect.x + rect.w || bullet.y < rect.y || bullet.y > rect.y + rect.h) return;
+      if (bullet.x < rect.x - 18 || bullet.x > rect.x + rect.w + 18 || bullet.y < rect.y - 12 || bullet.y > rect.y + rect.h + 16) return;
       bullet.dead = true;
       rect.cell.alive = false;
       if (rect.cell.shoot) {
@@ -1879,7 +1884,7 @@ function drawRaid(canvas, w, h) {
   raid.bullets.forEach(function (bullet) {
     ctx.fillRect(bullet.x - 2, bullet.y, 4, 12);
   });
-  ctx.font = "15px Consolas, Cascadia Mono, monospace";
+  ctx.font = "17px Consolas, Cascadia Mono, monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   raidRects().forEach(function (rect) {
