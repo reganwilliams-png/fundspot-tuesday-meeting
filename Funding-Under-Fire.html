@@ -1734,7 +1734,8 @@ function raidWave() {
 }
 function raidPace() {
   const t = Math.max(0, Math.min(1, (30 - raid.left) / 30));
-  return { wait: 1.05 - t * 0.62, step: 10 + t * 8, drop: 8 + t * 6 };
+  const ramp = t * t;
+  return { wait: 1.05 - ramp * 0.8, step: 10 + ramp * 12, drop: 8 + ramp * 4 };
 }
 function placeRaidBlocks(w) {
   const cols = w < 520 ? 2 : 3;
