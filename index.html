@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Fundspot Tuesday meeting Chunking and Sequencing presentation</title>
+<style>
+  :root {
+    --text: #e8f3ff;
+    --muted: #93a7bd;
+    --cyan: #5ce1ff;
+    --cyan-2: #8af0ff;
+    --line: rgba(140, 196, 255, 0.22);
+    --ink: #041018;
+    --sans: Bahnschrift, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 8% -10%, rgba(46, 130, 190, 0.28), transparent 55%),
+      radial-gradient(700px 420px at 110% 0%, rgba(20, 70, 120, 0.35), transparent 50%),
+      linear-gradient(180deg, #081421, #050910 60%, #071018);
+  }
+  main {
+    width: min(880px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: max(28px, env(safe-area-inset-top)) 0 max(36px, env(safe-area-inset-bottom));
+  }
+  .eyebrow {
+    color: var(--cyan);
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(34px, 8vw, 68px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0;
+    max-width: 14ch;
+  }
+  h1 span { display: block; color: var(--cyan-2); }
+  .lede {
+    font-size: clamp(18px, 2.4vw, 24px);
+    max-width: 36rem;
+    margin: 18px 0 8px;
+  }
+  .line { margin: 0; font-size: clamp(16px, 2vw, 20px); }
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 28px 0;
+  }
+  .card {
+    border: 1px solid var(--line);
+    background: rgba(8, 22, 38, 0.72);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .card b { display: block; letter-spacing: 0.08em; font-size: 13px; margin-bottom: 8px; }
+  .card p { margin: 0; color: var(--muted); line-height: 1.45; }
+  .play {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: min(100%, 520px);
+    min-height: 64px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: var(--cyan);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: clamp(18px, 2.4vw, 22px);
+    line-height: 1.25;
+  }
+  .play small {
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .play:hover { filter: brightness(1.06); }
+  .play:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .fine { color: var(--muted); font-size: 13px; margin-top: 22px; line-height: 1.45; }
+  @media (max-width: 700px) {
+    main { width: min(100% - 28px, 880px); }
+    .cards { grid-template-columns: 1fr; }
+    .play { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">FUNDSPOT · TUESDAY MEETING</p>
+  <h1>Fundspot Tuesday meeting <span>Chunking and Sequencing presentation</span></h1>
+  <p class="lede">Break it down. Put it in order. Take the next step.</p>
+  <p class="line">Don't let urgency replace thinking. Clarity creates action.</p>
+  <div class="cards">
+    <article class="card">
+      <b>CHUNKING</b>
+      <p>Sort the work by what it actually is. A new file, a call, a review, and a settlement are different jobs.</p>
+    </article>
+    <article class="card">
+      <b>SEQUENCING</b>
+      <p>Read the file, then ask for what is missing, then submit, then offer. Settlement is not a shortcut.</p>
+    </article>
+  </div>
+  <a class="play" href="Funding-Under-Fire.html" target="_blank" rel="noopener">
+    Want to play a game to reinforce the concepts?
+    <small>Opens Funding Under Fire in a new page</small>
+  </a>
+  <p class="fine">Works in the browser on a computer or a phone. Nothing to install.</p>
+</main>
+</body>
+</html>

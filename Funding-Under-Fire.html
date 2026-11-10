@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Funding Under Fire</title>
+<style>
+  :root {
+    --bg: #07111c;
+    --text: #e8f3ff;
+    --muted: #93a7bd;
+    --cyan: #5ce1ff;
+    --cyan-2: #8af0ff;
+    --amber: #ffc14d;
+    --red: #ff5d6c;
+    --green: #3ee0a0;
+    --line: rgba(140, 196, 255, 0.22);
+    --panel: rgba(10, 24, 42, 0.82);
+    --ink: #041018;
+    --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+    --sans: Bahnschrift, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: var(--sans);
+    background:
+      radial-gradient(1100px 520px at 8% -10%, rgba(46, 130, 190, 0.22), transparent 55%),
+      radial-gradient(800px 480px at 110% 0%, rgba(20, 70, 120, 0.28), transparent 50%),
+      linear-gradient(180deg, #081421, #050910 55%, #071018);
+    overflow: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(120, 190, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120, 190, 255, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(circle at 50% 20%, #000 15%, transparent 78%);
+  }
+  button, [role="button"] { font: inherit; color: inherit; }
+  button {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: rgba(8, 22, 38, 0.8);
+    color: var(--text);
+    border-radius: 999px;
+    min-height: 40px;
+    padding: 0 14px;
+    letter-spacing: 0.06em;
+  }
+  button:hover { border-color: rgba(92, 225, 255, 0.7); }
+  button:disabled { cursor: not-allowed; opacity: 0.55; }
+  button.primary {
+    background: var(--cyan);
+    color: var(--ink);
+    border-color: transparent;
+    font-weight: 700;
+  }
+  button.primary:disabled { background: #1b3348; color: #7d93a8; }
+  button.ghost { background: transparent; }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  #app { height: 100%; position: relative; z-index: 1; }
+  .screen {
+    height: 100%;
+    max-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .screen.play { overflow: hidden; }
+
+  .brief, .debrief { overflow: auto; }
+  .hero {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 4vh 28px 32px;
+    width: 100%;
+  }
+  .eyebrow {
+    color: var(--cyan);
+    letter-spacing: 0.22em;
+    font-size: 12px;
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(46px, 7vw, 84px);
+    line-height: 0.9;
+    margin: 0;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+  h1 span { display: block; color: var(--cyan-2); }
+  .lede {
+    font-size: clamp(18px, 2vw, 24px);
+    max-width: 38rem;
+    color: var(--text);
+    margin: 16px 0 8px;
+  }
+  .quiet { color: var(--muted); margin: 0; line-height: 1.45; }
+  .stamps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 22px 0;
+  }
+  .stamp {
+    border: 1px solid var(--line);
+    background: rgba(8, 22, 38, 0.65);
+    border-radius: 12px;
+    padding: 10px 12px;
+    min-width: 140px;
+  }
+  .stamp b { display: block; letter-spacing: 0.08em; font-size: 13px; }
+  .stamp span { color: var(--muted); font-size: 13px; }
+  .roles { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 8px; }
+  .roles button {
+    text-align: left;
+    letter-spacing: 0.02em;
+    border-radius: 12px;
+    min-height: 62px;
+    min-width: 150px;
+    padding: 8px 12px;
+  }
+  .roles button b { display: block; font-size: 15px; }
+  .roles button span { display: block; color: var(--muted); font-size: 12px; letter-spacing: 0; }
+  .roles button.on { border-color: var(--cyan); box-shadow: inset 0 0 0 1px var(--cyan); }
+  .launch { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+  .raid-stage { flex: 1 1 0; min-height: 0; position: relative; margin: 8px 14px 14px; }
+  .raid-stage canvas { width: 100%; height: 100%; display: block; background: #050910; border: 1px solid var(--line); border-radius: 12px; cursor: crosshair; touch-action: none; }
+  .raidflash { position: absolute; left: 16px; top: 12px; margin: 0; font-weight: 700; letter-spacing: 0.04em; text-shadow: 0 2px 10px #000; }
+  .clockface {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 8px 0 18px;
+  }
+  .clockface strong {
+    font-variant-numeric: tabular-nums;
+    font-size: 42px;
+    letter-spacing: 0.04em;
+  }
+  .fine { color: var(--muted); font-size: 13px; margin-top: 22px; }
+
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 14px 0;
+    position: relative;
+    z-index: 6;
+  }
+  .brand { display: flex; flex-direction: column; min-width: 0; flex: 1 1 160px; }
+  .timerwrap { flex: 0 0 auto; }
+  .controls { flex: 1 1 220px; min-width: 0; }
+  .brand .name { font-weight: 700; letter-spacing: 0.04em; }
+  .brand small { color: var(--muted); letter-spacing: 0.14em; font-size: 11px; }
+  .timerwrap { text-align: center; }
+  .timer {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 148px;
+    padding: 4px 18px 6px;
+    border-radius: 16px;
+    border: 1px solid rgba(92, 225, 255, 0.45);
+    background: rgba(4, 16, 28, 0.72);
+    font-variant-numeric: tabular-nums;
+  }
+  .timer b { font-size: clamp(32px, 4vw, 48px); line-height: 1; letter-spacing: 0.04em; }
+  .timer em { font-style: normal; letter-spacing: 0.18em; font-size: 11px; color: var(--muted); }
+  .controls { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+  .controls button { min-height: 36px; padding: 0 10px; font-size: 12px; }
+  .rail {
+    display: flex;
+    gap: 6px;
+    padding: 8px 14px 0;
+    flex-wrap: wrap;
+  }
+  .rail span {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 4px 8px;
+  }
+  .rail span.on { color: var(--ink); background: var(--cyan); }
+  .rail span.done { color: var(--green); border-color: rgba(62, 224, 160, 0.4); }
+  .alertstrip {
+    margin: 8px 14px 0;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(6, 18, 32, 0.72);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .lights { display: flex; gap: 5px; }
+  .lights i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: block;
+    background: var(--cyan);
+    opacity: 0.45;
+  }
+  .objective {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+    padding: 8px 16px 0;
+  }
+  .objective p { margin: 0; font-size: 15px; }
+  .objective .sel { color: var(--cyan); font-size: 13px; text-align: right; }
+  .stage {
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 12px;
+    padding: 10px 14px;
+    overflow: hidden;
+  }
+  .panel, .board, .matrix, .slots, .zone, .pile, .curve, .comms, .bank, .msg { min-width: 0; }
+  .panel {
+    min-height: 0;
+    height: 100%;
+    max-width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel head, .panel .ph {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+    padding: 10px 12px 6px;
+    min-width: 0;
+  }
+  .ph b { letter-spacing: 0.08em; font-size: 13px; flex: 0 0 auto; }
+  .ph span, .hint { color: var(--muted); font-size: 12px; min-width: 0; }
+  .pile, .zone-cards, .bank, .msg {
+    overflow: auto;
+    min-height: 0;
+    padding: 0 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .board {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+  .matrix {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+  .axis {
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .axis.row {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .zone {
+    min-height: 0;
+    border: 1px dashed rgba(140, 196, 255, 0.38);
+    border-radius: 14px;
+    background: rgba(5, 14, 24, 0.45);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .zone header { margin-bottom: 6px; }
+  .zone header b { display: block; letter-spacing: 0.04em; font-size: 13px; overflow-wrap: anywhere; }
+  .zone header small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .zone.over, .pile.over { border-color: var(--cyan); box-shadow: inset 0 0 0 1px var(--cyan); }
+  .zone.now { border-color: rgba(255, 93, 108, 0.55); }
+  .zone.schedule { border-color: rgba(92, 225, 255, 0.45); }
+  .zone.quick { border-color: rgba(255, 193, 77, 0.5); }
+  .card {
+    text-align: left;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(140, 196, 255, 0.28);
+    background: linear-gradient(180deg, rgba(16, 40, 68, 0.95), rgba(8, 22, 40, 0.95));
+    padding: 8px 10px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .card.dragging { opacity: 0.35; pointer-events: none; }
+  .pile, .bank, .msg { flex: 1; }
+  .card.selected { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 18px rgba(92, 225, 255, 0.2); }
+  .card .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .ref { font-family: var(--mono); color: var(--cyan); font-size: 12px; letter-spacing: 0.06em; }
+  .card h3 { margin: 3px 0; font-size: 15px; line-height: 1.2; }
+  .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+  .heat, .tag, .grade {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+  .heat.ring, .grade.missed { color: var(--red); }
+  .heat.quiet { color: var(--cyan); }
+  .grade.right { color: var(--green); }
+  .heat.alert, .grade.close, .grade.surface { color: var(--amber); }
+  .heat.ping, .heat.read { color: var(--muted); }
+  .intel {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    color: var(--text);
+    font-size: 13px;
+  }
+  .mini {
+    min-height: 32px;
+    margin-top: 8px;
+    width: 100%;
+    border-radius: 8px;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+  }
+  .slots { display: flex; flex-direction: column; gap: 8px; padding: 10px; min-height: 0; height: 100%; }
+  .card.slim { padding: 6px 8px; }
+  .card.slim h3 { margin: 0; font-size: 14px; }
+  .slots .zone header { margin-bottom: 4px; }
+  .slots .zone header small { display: none; }
+  .slots .zone-cards { overflow: hidden; }
+  .slots .zone { flex: 1; }
+  .outzone { flex: 0.8; border-style: solid; }
+  .curve {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 12px;
+    min-height: 0;
+  }
+  .event {
+    padding: 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 193, 77, 0.45);
+    background: rgba(28, 20, 8, 0.45);
+  }
+  .event h2 { margin: 8px 0; font-size: clamp(26px, 3vw, 36px); line-height: 1.05; }
+  .options { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .options button.opt {
+    text-align: left;
+    border-radius: 14px;
+    padding: 12px 14px;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .options button.opt b { letter-spacing: 0.04em; }
+  .options button.opt span { color: var(--muted); letter-spacing: 0; font-size: 14px; }
+  .options button.opt.good { border-color: var(--green); }
+  .options button.opt.bad { border-color: var(--red); }
+  .comms {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 12px;
+    min-height: 0;
+  }
+  .frag {
+    text-align: left;
+    border-radius: 12px;
+    padding: 10px 12px;
+    min-height: 52px;
+  }
+  .frag small { display: block; color: var(--cyan); letter-spacing: 0.12em; font-size: 10px; }
+  .frag.on { border-color: var(--cyan); }
+  .msg .slotline {
+    min-height: 64px;
+    border-radius: 12px;
+    border: 1px dashed rgba(140, 196, 255, 0.38);
+    padding: 8px 10px;
+    background: rgba(5, 14, 24, 0.45);
+  }
+  .actionbar, .dock {
+    flex: 0 0 auto;
+    margin: 0 14px 12px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    min-height: 64px;
+    padding: 8px 10px 8px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(6, 16, 28, 0.9);
+  }
+  .dock strong { letter-spacing: 0.06em; }
+  .dock p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .dock .btns, .actionbar .btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .dock.good { border-color: rgba(62, 224, 160, 0.55); }
+  .dock.mid { border-color: rgba(255, 193, 77, 0.55); }
+  .dock.bad { border-color: rgba(255, 93, 108, 0.55); }
+  #ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 20;
+    pointer-events: none;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #103050;
+    border: 1px solid var(--cyan);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    max-width: 280px;
+  }
+  .modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 8, 14, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    padding: 20px;
+  }
+  .modal .box {
+    width: min(440px, 100%);
+    background: #0c1c30;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .modal h2 { margin: 0 0 8px; }
+  .debrief .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 22px 36px; }
+  .quote { font-size: clamp(26px, 3.4vw, 42px); line-height: 1.05; margin: 8px 0; letter-spacing: -0.03em; }
+  .scoreline { display: flex; justify-content: space-between; gap: 18px; align-items: end; }
+  .scoreline .big { font-size: clamp(42px, 6vw, 72px); line-height: 0.9; font-variant-numeric: tabular-nums; }
+  .bars { display: grid; gap: 8px; margin: 16px 0; }
+  .barrow { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; align-items: center; }
+  .track { height: 8px; background: #13283c; border-radius: 99px; overflow: hidden; }
+  .track i { display: block; height: 100%; background: var(--cyan); }
+  .lessons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .lesson { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: rgba(8, 20, 34, 0.7); }
+  .lesson b { display: block; margin-bottom: 4px; }
+  .notes { margin: 12px 0; padding-left: 18px; }
+  .notes li { margin: 4px 0; }
+  .pauseveil {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 8, 14, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+    font-size: 28px;
+    letter-spacing: 0.18em;
+  }
+  body[data-pressure="ok"] .screen.play { animation: wash-ok 3.2s ease-in-out infinite; }
+  body[data-pressure="ok"] .lights i { animation: blink 2.2s steps(2, end) infinite; }
+  body[data-pressure="amber"] .timer { color: var(--amber); border-color: var(--amber); animation: pulse 0.9s ease-in-out infinite, shake-soft 0.28s linear infinite; }
+  body[data-pressure="amber"] .screen.play { animation: wash-amber 1s ease-in-out infinite; }
+  body[data-pressure="amber"] .alertstrip { border-color: rgba(255, 193, 77, 0.75); color: #ffe3ad; animation: flash-amber 1s steps(2, end) infinite; }
+  body[data-pressure="amber"] .lights i { background: var(--amber); opacity: 1; animation: blink 0.7s steps(2, end) infinite; }
+  body[data-pressure="hot"] .timer { color: var(--amber); border-color: var(--amber); animation: pulse 0.45s ease-in-out infinite, shake-hard 0.18s linear infinite; }
+  body[data-pressure="hot"] .screen.play { animation: wash-hot 0.55s ease-in-out infinite, shake-soft 0.16s linear infinite; }
+  body[data-pressure="hot"] .alertstrip { border-color: rgba(255, 193, 77, 0.9); color: #ffe7b8; background: rgba(72, 42, 4, 0.72); animation: flash-amber 0.45s steps(2, end) infinite; }
+  body[data-pressure="hot"] .lights i { background: var(--amber); opacity: 1; animation: blink 0.32s steps(2, end) infinite; }
+  body[data-pressure="red"] .timer { color: var(--red); border-color: var(--red); animation: pulse-red 0.22s ease-in-out infinite, shake-hard 0.1s linear infinite; }
+  body[data-pressure="red"] .screen.play { animation: wash-red 0.28s steps(2, end) infinite, shake-hard 0.09s linear infinite; }
+  body[data-pressure="red"] .alertstrip { border-color: rgba(255, 93, 108, 0.9); color: #ffd0d4; background: rgba(70, 10, 16, 0.78); animation: flash-red 0.28s steps(2, end) infinite; }
+  body[data-pressure="red"] .lights i { background: var(--red); opacity: 1; animation: blink 0.18s steps(2, end) infinite; }
+  body.reduce-motion .screen.play,
+  body.reduce-motion .timer,
+  body.reduce-motion .lights i,
+  body.reduce-motion .alertstrip,
+  body.reduce-motion .card.enter { animation: none !important; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(255, 193, 77, 0.35); } }
+  @keyframes pulse-red { 50% { box-shadow: 0 0 0 8px rgba(255, 93, 108, 0.55); background: rgba(90, 12, 18, 0.85); } }
+  @keyframes blink { 50% { opacity: 0.15; } }
+  @keyframes wash-ok { 50% { box-shadow: inset 0 0 70px rgba(92, 225, 255, 0.08); } }
+  @keyframes wash-amber { 50% { box-shadow: inset 0 0 90px rgba(255, 193, 77, 0.28); } }
+  @keyframes wash-hot { 40% { box-shadow: inset 0 0 120px rgba(255, 160, 40, 0.38); } }
+  @keyframes wash-red { 50% { box-shadow: inset 0 0 140px rgba(255, 50, 70, 0.5); } }
+  @keyframes flash-amber { 50% { filter: brightness(1.45); } }
+  @keyframes flash-red { 50% { filter: brightness(1.7); } }
+  @keyframes shake-soft {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-1px, 1px); }
+    50% { transform: translate(1px, -1px); }
+    75% { transform: translate(-1px, 0); }
+  }
+  @keyframes shake-hard {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-3px, 1px); }
+    40% { transform: translate(3px, -2px); }
+    60% { transform: translate(-2px, 2px); }
+    80% { transform: translate(3px, 1px); }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .card.enter { animation: rise 0.35s ease both; }
+  @media (max-width: 980px) {
+    .stage, .curve, .comms { grid-template-columns: minmax(0, 1fr); }
+    .top { flex-wrap: wrap; }
+    .barrow { grid-template-columns: 1fr; }
+    .lessons { grid-template-columns: 1fr; }
+    .screen.brief, .screen.debrief { overflow: auto; }
+  }
+  @media (max-width: 720px) {
+    body { overflow: auto; }
+    .screen, .screen.play { height: auto; min-height: 100%; max-height: none; overflow: visible; }
+    .hero { padding: 24px 16px 48px; }
+    .clockface, .launch, .objective { flex-direction: column; align-items: stretch; }
+    .launch button, .roles button { width: 100%; }
+    .objective .sel { text-align: left; }
+    .stage { min-height: 70vh; }
+    .raid-stage { min-height: 68vh; }
+    h1 { font-size: clamp(36px, 12vw, 56px); }
+  }
+</style>
+</head>
+<body>
+<div id="live" class="sr" aria-live="polite"></div>
+<div id="ghost" hidden></div>
+<div id="app"></div>
+<script>
+const GAME = 180;
+const ORDER = ["chunk", "priority", "sequence", "curve", "comms"];
+const PHASE_NAME = {
+  chunk: "01 Chunk",
+  priority: "02 Judge",
+  sequence: "03 Sequence",
+  curve: "04 Adapt",
+  comms: "05 Say it"
+};
+
+const LANES = [
+  { id: "new", name: "New application", sub: "Form just in" },
+  { id: "info", name: "Broker to call", sub: "Back with you" },
+  { id: "security", name: "With validation", sub: "In review" },
+  { id: "blocked", name: "With settlement", sub: "PayPal is in" }
+];
+const QUADS = [
+  { id: "now", name: "Do first", sub: "New applications, or settlement that will cost or slip" },
+  { id: "schedule", name: "Schedule", sub: "Matters, not on this clock" },
+  { id: "quick", name: "Quick action", sub: "Time-sensitive, low consequence" },
+  { id: "defer", name: "Defer", sub: "No deadline, no real consequence" }
+];
+const LANE_OF = Object.fromEntries(LANES.map(function (l) { return [l.id, l.name]; }));
+const QUAD_OF = Object.fromEntries(QUADS.map(function (l) { return [l.id, l.name]; }));
+
+const CHUNK = [
+  { id: "c1", ref: "FS-1842", title: "Marco Rossi's form", text: "Application form just arrived. A residential property is offered as security. Nobody has called him.", best: "new", ok: [], why: "New application. It has not been called and it has not been submitted. Loud does not make it a later stage." },
+  { id: "c2", ref: "FS-1760", title: "Dana is a decline", text: "Dana Okonkwo's statements show too much gambling. The file has come back declined.", best: "info", ok: [], why: "Too much gambling is a decline. The next step is telling her. It is not an open question, and it is not settlement." },
+  { id: "c3", ref: "FS-1711", title: "Omar is in review", text: "Omar Shah's submission is in credit review. Lumi's payout figure is still outstanding.", best: "security", ok: [], why: "The file is in review. Chasing Lumi feeds that review. It does not move the file to a call pile or to settlement." },
+  { id: "c4", ref: "FS-1794", title: "Helen, PayPal in", text: "Helen Tran accepted and paid by PayPal this morning. VOI has not started.", best: "blocked", ok: [], why: "PayPal is in. This file is in settlement, not a document chase." },
+  { id: "c5", ref: "FS-1808", title: "Samir's van is leased", text: "Samir Haddad offered a van. The rego shows it is leased, and the registered owner is not Samir. No comprehensive insurance is in his name.", best: "info", ok: [], why: "Call before this is submitted as his security. A leased, third-party vehicle is not his." }
+];
+
+const PRIORITY = [
+  { id: "p1", ref: "FS-1847", title: "Priya Nair just applied", heat: "new", heatLabel: "NEW", text: "Priya Nair's application just arrived. A residential property is offered as security.", intel: "New applications go first. This is not a status call and it is not a rate sheet.", best: "now", ok: [], points: 8, why: "Do first. A new application does not wait behind a ringing phone or a rate update." },
+  { id: "p2", ref: "FS-1794", title: "Helen's payout locks today", heat: "alert", heatLabel: "COST", text: "Helen Tran is in settlement. Bizcap's payout has to be locked today. Leave it and she pays extra interest, or the date slips.", intel: "This is already in settlement. Missing it costs the client, or it delays settlement. That is do first, with the new application.", best: "now", ok: [], points: 8, why: "Do first. It is in settlement, and leaving it creates a cost or a delay." },
+  { id: "p3", ref: "FS-1820", title: "Elena Voss is ringing", heat: "ring", heatLabel: "RINGING", text: "Elena wants to know if she is pre-approved. Her rates notice was never submitted.", intel: "She can hear what is missing. Nothing is costing her, and no settlement date is slipping. Do not put her ahead of a new application or Helen's payout.", best: "quick", ok: [], points: 7, why: "Quick action. The call is short. It is not a new application, and it is not a settlement that will cost or slip." },
+  { id: "p4", ref: "FS-1901", title: "Capify rate sheet", heat: "ping", heatLabel: "PING", text: "Capify emailed a general rate update. No client is named.", intel: "No new application, no settlement, no cost, no date. It can wait.", best: "defer", ok: [], points: 7, why: "Defer it. No client is waiting, and nothing gets more expensive if it sits." }
+];
+
+const SEQ = [
+  { id: "review", kicker: "READ", title: "Review Tom's application", text: "See what the form already contains before you ask for anything." },
+  { id: "confirm", kicker: "CALL", title: "Call Tom for the gaps", text: "Rates notice, rego, comprehensive insurance, and the trust deed are still out." },
+  { id: "contact", kicker: "SEND", title: "Submit the file", text: "Only once those documents are in." },
+  { id: "update", kicker: "OFFER", title: "Offer pre-approval today", text: "The same day the review is satisfied." },
+  { id: "trap", kicker: "LINE", title: "Start Jasmine now", text: "Ask Jasmine for VOI and legal documents before Tom has accepted or paid." }
+];
+
+const CURVE = [
+  { id: "send", title: "Pre-approve Omar", text: "Tell him he is pre-approved, send a PayPal link, and ask Jasmine to start VOI." },
+  { id: "query", title: "Notify him, query Lumi", text: "Tell Omar today that pre-approval is waiting on Lumi. Ask Lumi to reconcile the figure. Jasmine does not start." },
+  { id: "park", title: "Leave Omar until tomorrow", text: "Park the file and open Marco Rossi's new application instead." }
+];
+
+const FRAGMENTS = [
+  { id: "w1", beat: "WHAT", text: "Omar, we cannot offer pre-approval today." },
+  { id: "w2", beat: "WHY", text: "The Lumi payout figure does not match the file." },
+  { id: "w3", beat: "DOING", text: "I have asked Lumi to reconcile it." },
+  { id: "w4", beat: "NEXT", text: "I will call the same day it is cleared. Nothing is payable yet." },
+  { id: "t1", beat: "TRAP", text: "You are pre-approved. Please pay the PayPal invoice." },
+  { id: "t2", beat: "TRAP", text: "Jasmine has settlement locked for Friday." }
+];
+const COMMS_ORDER = ["w1", "w2", "w3", "w4"];
+const BEATS = ["WHAT", "WHY", "DOING", "NEXT"];
+
+const OBJECTIVES = {
+  chunk: "Sort by where the file is in the flow. Loud is not a stage.",
+  priority: "Do first: a new application, and anything in settlement that will cost money or slip the date. Open the intel first.",
+  sequence: "Tom Nguyen's application is in. Order the path. Leave settlement out.",
+  curve: "Omar will not be approved today. He still hears something. Settlement does not start.",
+  comms: "Same-day notification, in order. What, why, what you are doing, what happens next. No pre-approval and no PayPal."
+};
+
+const ALERTS = {
+  ok: "Clock is steady. Make the call you can defend.",
+  amber: "90 seconds. Commit the calls you can defend.",
+  hot: "45 seconds. The blocker beats the noise.",
+  red: "15 seconds. Lock the next step.",
+  over: "Time. The board is frozen."
+};
+const PRESSURE_WORD = { ok: "STEADY", amber: "MOVE", hot: "COMMIT", red: "FINAL", over: "TIME" };
+const SPEEDS = [
+  { id: 1, name: "Standard", sub: "Full 3:00" },
+  { id: 2, name: "Fast", sub: "Clock at 2×" },
+  { id: 3, name: "Experienced", sub: "Clock at 3×" }
+];
+const RAID_SHOOT = ["New application", "Priya just applied", "Payout locks today", "Settlement slips", "Extra interest", "New file today"];
+const RAID_LEAVE = ["Elena is ringing", "Capify rates", "Rate update", "Missing rates", "Thursday deed", "General email"];
+
+const ROLES = [
+  { id: "christian", name: "Christian", kicker: "Broker" },
+  { id: "isabella", name: "Isabella", kicker: "Broker" },
+  { id: "regan", name: "Regan", kicker: "Broker" },
+  { id: "fay", name: "Fay", kicker: "Broker and manager" }
+];
+
+function me() {
+  return ROLES.find(function (r) { return r.id === state.role; }) || null;
+}
+function isFay() {
+  return state.role === "fay";
+}
+function byId(list, id) {
+  return list.find(function (c) { return c.id === id; });
+}
+function applyDesk() {
+  const c1 = byId(CHUNK, "c1");
+  const c2 = byId(CHUNK, "c2");
+  const c3 = byId(CHUNK, "c3");
+  const p1 = byId(PRIORITY, "p1");
+  const p2 = byId(PRIORITY, "p2");
+  if (isFay()) {
+    c1.text = "A finance broker sent Marco Rossi's application. A residential property is offered as security. Nobody has called him.";
+    c2.text = "A finance broker sent Dana Okonkwo. The statements show too much gambling. The file has come back declined.";
+    c3.text = "A finance broker sent Omar Shah. The submission is in credit review. Lumi's payout figure is still outstanding.";
+    p1.text = "A finance broker sent Priya Nair's application. A residential property is offered as security.";
+    p2.text = "A finance broker sent Helen Tran. She is in settlement. Bizcap's payout has to be locked today. Leave it and she pays extra interest, or the date slips.";
+  } else {
+    c1.text = "Application form just arrived. A residential property is offered as security. Nobody has called him.";
+    c2.text = "Dana Okonkwo's statements show too much gambling. The file has come back declined.";
+    c3.text = "Omar Shah's submission is in credit review. Lumi's payout figure is still outstanding.";
+    p1.text = "Priya Nair's application just arrived. A residential property is offered as security.";
+    p2.text = "Helen Tran is in settlement. Bizcap's payout has to be locked today. Leave it and she pays extra interest, or the date slips.";
+  }
+}
+
+const state = {};
+let drag = null;
+let loop = 0;
+let audioCtx = null;
+let alarmAt = 0;
+let raidLoopOn = false;
+const raid = {};
+
+function prefersReduce() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function fresh() {
+  const sound = state.sound === true;
+  const reduce = state.reduce === undefined ? prefersReduce() : state.reduce;
+  Object.assign(state, {
+    phase: "brief",
+    chunk: {},
+    priority: {},
+    sequence: {},
+    comms: [],
+    reached: { chunk: false, priority: false, sequence: false, curve: false, comms: false },
+    investigated: {},
+    openIntel: null,
+    selected: null,
+    review: false,
+    curve: null,
+    confirming: false,
+    paused: false,
+    pausedForModal: false,
+    running: false,
+    remaining: GAME,
+    startedAt: 0,
+    pausedAccum: 0,
+    pauseStarted: 0,
+    reason: null,
+    justEntered: false,
+    sound: sound,
+    reduce: reduce,
+    role: null,
+    speed: state.speed || 1
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function say(text) {
+  const live = document.getElementById("live");
+  if (live) live.textContent = text;
+}
+function fmt(sec) {
+  const s = Math.max(0, Math.ceil(sec - 1e-6));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0");
+}
+function bucket(rem) {
+  if (rem <= 0) return "over";
+  if (rem <= 15) return "red";
+  if (rem <= 45) return "hot";
+  if (rem <= 90) return "amber";
+  return "ok";
+}
+function elapsedMs() {
+  let extra = state.pausedAccum;
+  if (state.paused) extra += Date.now() - state.pauseStarted;
+  return (Date.now() - state.startedAt - extra) * (state.speed || 1);
+}
+function inputLocked() {
+  return state.paused || state.review || state.confirming || state.phase === "brief" || state.phase === "debrief" || state.remaining <= 0;
+}
+function cardById(id) {
+  return CHUNK.concat(PRIORITY, SEQ, FRAGMENTS).find(function (c) { return c.id === id; });
+}
+function currentMap() {
+  if (state.phase === "chunk") return state.chunk;
+  if (state.phase === "priority") return state.priority;
+  if (state.phase === "sequence") return state.sequence;
+  return null;
+}
+function beep(freq, dur, gain, type, delay) {
+  if (!state.sound) return;
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const t = audioCtx.currentTime + (delay || 0);
+    o.type = type || "sine";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(gain, t);
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.start(t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.stop(t + dur);
+  } catch (err) { /* sound is optional */ }
+}
+function alarm(rem) {
+  if (!state.sound || state.paused || state.confirming) return;
+  const b = bucket(rem);
+  const gap = b === "red" ? 320 : b === "hot" ? 700 : b === "amber" ? 1600 : 6000;
+  const now = Date.now();
+  if (now - alarmAt < gap) return;
+  alarmAt = now;
+  if (b === "red") {
+    beep(880, 0.08, 0.08, "square");
+    beep(520, 0.12, 0.07, "square", 0.09);
+  } else if (b === "hot") {
+    beep(740, 0.1, 0.055, "square");
+  } else if (b === "amber") {
+    beep(560, 0.08, 0.04, "triangle");
+  } else {
+    beep(340, 0.05, 0.02, "sine");
+  }
+}
+
+function scoreChunk() {
+  if (!state.reached.chunk) {
+    return { points: 0, max: 20, grades: {}, notes: [{ tone: "bad", text: "The pile was never sorted, so the morning stayed a blur." }] };
+  }
+  let points = 0;
+  const grades = {};
+  const notes = [];
+  CHUNK.forEach(function (card) {
+    const zone = state.chunk[card.id];
+    if (zone === card.best) {
+      points += 4;
+      grades[card.id] = "right";
+    } else if (zone && card.ok.indexOf(zone) !== -1) {
+      points += 2;
+      grades[card.id] = "close";
+      notes.push({ tone: "mid", text: card.ref + " can sit in " + LANE_OF[zone] + ". Cleaner lane: " + LANE_OF[card.best] + ". " + card.why });
+    } else if (!zone) {
+      grades[card.id] = "missed";
+      notes.push({ tone: "bad", text: card.ref + " was left in the pile. " + card.why });
+    } else {
+      grades[card.id] = "missed";
+      notes.push({ tone: "bad", text: card.ref + " is not " + LANE_OF[zone] + ". " + card.why });
+    }
+  });
+  if (points === 20) notes.unshift({ tone: "good", text: "The pile is readable. Each file sits with the kind of work it actually needs." });
+  return { points: points, max: 20, grades: grades, notes: notes };
+}
+
+function scorePriority() {
+  if (!state.reached.priority) {
+    return { points: 0, max: 30, grades: {}, notes: [{ tone: "bad", text: "Nothing was judged. The ringing phone was left in charge." }] };
+  }
+  let points = 0;
+  const grades = {};
+  const notes = [];
+  PRIORITY.forEach(function (card) {
+    const zone = state.priority[card.id];
+    const known = !!state.investigated[card.id];
+    const full = card.points;
+    if (!zone) {
+      grades[card.id] = "missed";
+      notes.push({ tone: "bad", text: card.ref + " was not placed. " + card.why });
+      return;
+    }
+    if (zone === card.best && known) {
+      points += full;
+      grades[card.id] = "right";
+    } else if (zone === card.best) {
+      points += Math.round(full / 2);
+      grades[card.id] = "surface";
+      notes.push({ tone: "mid", text: card.ref + " is in the right quadrant on a surface read. Half marks. " + card.intel });
+    } else if (known && card.ok.indexOf(zone) !== -1) {
+      points += Math.round(full / 2);
+      grades[card.id] = "close";
+      notes.push({ tone: "mid", text: card.ref + " in " + QUAD_OF[zone] + " is defensible. Cleaner call: " + QUAD_OF[card.best] + ". " + card.why });
+    } else {
+      grades[card.id] = "missed";
+      notes.push({ tone: "bad", text: card.ref + " does not belong in " + QUAD_OF[zone] + ". " + card.why });
+    }
+  });
+  if (points === 30) notes.unshift({ tone: "good", text: "The new application and the settlement that would cost or slip went first. The ringing phone did not." });
+  return { points: points, max: 30, grades: grades, notes: notes };
+}
+
+function seqIndex(id) {
+  const slot = state.sequence[id];
+  if (!slot || slot === "out") return -1;
+  return Number(slot.slice(1));
+}
+function scoreSequence() {
+  if (!state.reached.sequence) {
+    return { points: 0, max: 25, notes: [{ tone: "bad", text: "Tom's path was never ordered, so the file never reached a same-day pre-approval or a clear ask." }] };
+  }
+  let points = 0;
+  const notes = [];
+  const trapOut = state.sequence.trap === "out";
+  const ri = seqIndex("review");
+  const ci = seqIndex("confirm");
+  const ki = seqIndex("contact");
+  const ui = seqIndex("update");
+  if (trapOut) points += 5;
+  else if (state.sequence.trap) notes.push({ tone: "bad", text: "Settlement does not start here. Tom has not accepted, and he has not paid." });
+  else notes.push({ tone: "bad", text: "The settlement jump was still in the pile. It does not get a slot." });
+  if (ri === 0) points += 5;
+  else notes.push({ tone: "bad", text: "Read the application first. You cannot ask for documents you have not checked." });
+  if (ri >= 0 && ci > ri) points += 5;
+  else notes.push({ tone: "bad", text: "Ask for the gaps after the read. Rates, rego, insurance, trust deed." });
+  if (ci >= 0 && ki > ci) points += 5;
+  else notes.push({ tone: "bad", text: "Submit only once those documents are in." });
+  if (ki >= 0 && ui > ki) points += 5;
+  else notes.push({ tone: "bad", text: "Offer pre-approval the same day the review is satisfied. Not before." });
+  if (points === 25) {
+    return { points: 25, max: 25, notes: [{ tone: "good", text: "Read it, ask for the gaps, submit, then offer the same day it clears. Settlement stays out." }] };
+  }
+  if (points >= 20 && !trapOut) notes.unshift({ tone: "mid", text: "The path of the real work holds. Settlement still has to stay out of it." });
+  return { points: points, max: 25, notes: notes };
+}
+
+function scoreCurve() {
+  if (!state.reached.curve) {
+    return { points: 0, max: 15, notes: [{ tone: "bad", text: "The mismatched payout figure never got a decision." }] };
+  }
+  if (state.curve === "query") {
+    return { points: 15, max: 15, notes: [{ tone: "good", text: "Omar heard today, and it was a notification. Lumi stays a question. No PayPal link goes out." }] };
+  }
+  if (state.curve === "send") {
+    return { points: 0, max: 15, notes: [{ tone: "bad", text: "That offers pre-approval before the figure matches. PayPal waits until he accepts." }] };
+  }
+  if (state.curve === "park") {
+    return { points: 0, max: 15, notes: [{ tone: "bad", text: "Leaving Omar until tomorrow breaks the same-day rule. He needed a notification today, and Lumi is still the blocker." }] };
+  }
+  return { points: 0, max: 15, notes: [{ tone: "bad", text: "No call was made on the mismatched payout figure." }] };
+}
+
+function scoreComms() {
+  if (!state.reached.comms) {
+    return { points: 0, max: 10, notes: [{ tone: "bad", text: "Omar did not get today's notification. Silence is how the chasing starts again." }] };
+  }
+  const picked = state.comms;
+  if (picked.some(function (id) { return id.charAt(0) === "t"; })) {
+    return { points: 0, max: 10, notes: [{ tone: "bad", text: "That message offers pre-approval or a settlement date. Neither is true today." }] };
+  }
+  const weights = [3, 3, 2, 2];
+  let points = 0;
+  for (let i = 0; i < 4; i++) if (picked[i] === COMMS_ORDER[i]) points += weights[i];
+  if (points === 10) {
+    return { points: 10, max: 10, notes: [{ tone: "good", text: "The update says what is happening, why it matters, what you are doing, and the next step." }] };
+  }
+  return { points: points, max: 10, notes: [{ tone: "mid", text: "Order that holds: what is happening, why it matters, what you are doing, what happens next. Take out any promise." }] };
+}
+
+function scoreOf(phase) {
+  if (phase === "chunk") return scoreChunk();
+  if (phase === "priority") return scorePriority();
+  if (phase === "sequence") return scoreSequence();
+  if (phase === "curve") return scoreCurve();
+  return scoreComms();
+}
+function banked() {
+  const idx = ORDER.indexOf(state.phase);
+  let n = 0;
+  ORDER.forEach(function (phase, i) {
+    if (state.phase === "debrief" || i < idx) n += scoreOf(phase).points;
+  });
+  return n;
+}
+function totalScore() {
+  return ORDER.reduce(function (sum, phase) { return sum + scoreOf(phase).points; }, 0);
+}
+
+function gradeLabel(g) {
+  if (g === "right") return "RIGHT";
+  if (g === "close") return "CLOSE";
+  if (g === "surface") return "SURFACE";
+  if (g === "missed") return "MISSED";
+  return "";
+}
+
+function renderCard(card, opts) {
+  const selected = state.selected === card.id ? " selected" : "";
+  const enter = opts.enter ? " enter" : "";
+  const delay = opts.enter ? " style=\"animation-delay:" + (opts.index * 40) + "ms\"" : "";
+  const grade = opts.grade ? "<span class=\"grade " + opts.grade + "\">" + gradeLabel(opts.grade) + "</span>" : "";
+  const heat = card.heat ? "<span class=\"heat " + card.heat + "\">" + esc(card.heatLabel) + "</span>" : "";
+  const kicker = card.kicker ? "<span class=\"ref\">" + esc(card.kicker) + "</span>" : "";
+  const ref = card.ref ? "<span class=\"ref\">" + esc(card.ref) + "</span>" : kicker;
+  let intel = "";
+  let button = "";
+  if (card.intel) {
+    const open = state.openIntel === card.id;
+    if (open) intel = "<div class=\"intel\">" + esc(card.intel) + "</div>";
+    const label = state.investigated[card.id] ? (open ? "HIDE INTEL" : "INTEL READ") : "OPEN INTEL";
+    button = "<button class=\"mini\" type=\"button\" data-stop=\"1\" data-intel=\"" + card.id + "\">" + label + "</button>";
+  }
+  if (opts.slim) {
+    return "<div class=\"card slim" + selected + "\" role=\"button\" tabindex=\"0\" data-card=\"" + card.id + "\" aria-pressed=\"" + (state.selected === card.id) + "\" aria-label=\"" + esc(card.title) + ".\">" +
+      "<div class=\"row\">" + ref + "<h3>" + esc(card.title) + "</h3>" + grade + "</div></div>";
+  }
+  const surface = opts.compact && !intel ? "" : "<p>" + esc(card.text) + "</p>";
+  return "<div class=\"card" + selected + enter + "\" role=\"button\" tabindex=\"0\" data-card=\"" + card.id + "\" aria-pressed=\"" + (state.selected === card.id) + "\" aria-label=\"" + esc(card.ref || card.kicker || "") + ". " + esc(card.title) + ".\"" + delay + ">" +
+    "<div class=\"row\">" + ref + heat + grade + "</div><h3>" + esc(card.title) + "</h3>" + surface + intel + button + "</div>";
+}
+
+function cardsIn(map, zone, list) {
+  return list.filter(function (card) { return map[card.id] === zone; });
+}
+function loose(map, list) {
+  return list.filter(function (card) { return !map[card.id]; });
+}
+
+function zoneHTML(zone, cards, label, sub, extra) {
+  const body = cards.map(function (card, i) {
+    return renderCard(card, { compact: true, index: i, grade: extra.grades ? extra.grades[card.id] : "" });
+  }).join("");
+  return "<div class=\"zone " + zone.id + "\" role=\"button\" tabindex=\"0\" data-zone=\"" + zone.id + "\" aria-label=\"" + esc(label) + ". " + cards.length + " placed.\">" +
+    "<header><b>" + esc(label) + "</b><small>" + esc(sub) + "</small></header><div class=\"zone-cards\">" + body + "</div></div>";
+}
+
+function pileHTML(list, map, grades) {
+  const items = loose(map, list);
+  const body = items.map(function (card, i) {
+    return renderCard(card, { enter: state.justEntered, index: i, grade: grades ? grades[card.id] : "" });
+  }).join("");
+  const empty = items.length ? "" : "<p class=\"hint\">All placed. Lock it in, or click a card to move it.</p>";
+  return "<div class=\"pile\" data-zone=\"tray\" tabindex=\"0\" aria-label=\"Unplaced files\">" + body + empty + "</div>";
+}
+
+function boardChunk(result) {
+  const grades = state.review ? result.grades : null;
+  const zones = LANES.map(function (lane) {
+    return zoneHTML(lane, cardsIn(state.chunk, lane.id, CHUNK), lane.name, lane.sub, { grades: grades });
+  }).join("");
+  return "<section class=\"panel\"><div class=\"ph\"><b>INCOMING</b><span>Click a card, then a lane. Drag works too.</span></div>" +
+    pileHTML(CHUNK, state.chunk, grades) + "</section><section class=\"panel\"><div class=\"board\">" + zones + "</div></section>";
+}
+
+function boardPriority(result) {
+  const grades = state.review ? result.grades : null;
+  const cells = {
+    now: QUADS[0], schedule: QUADS[1], quick: QUADS[2], defer: QUADS[3]
+  };
+  function cell(id) {
+    const q = cells[id];
+    return zoneHTML(q, cardsIn(state.priority, id, PRIORITY), q.name, q.sub, { grades: grades });
+  }
+  return "<section class=\"panel\"><div class=\"ph\"><b>FILES</b><span>Open intel before you judge.</span></div>" +
+    pileHTML(PRIORITY, state.priority, grades) + "</section><section class=\"panel\"><div class=\"matrix\">" +
+    "<div></div><div class=\"axis\">URGENT</div><div class=\"axis\">NOT URGENT</div>" +
+    "<div class=\"axis row\">IMPORTANT</div>" + cell("now") + cell("schedule") +
+    "<div class=\"axis row\">NOT IMPORTANT</div>" + cell("quick") + cell("defer") +
+    "</div></section>";
+}
+
+function boardSequence() {
+  const slots = [0, 1, 2, 3].map(function (n) {
+    const id = "s" + n;
+    const cards = cardsIn(state.sequence, id, SEQ);
+    const words = ["FIRST", "NEXT", "THEN", "AFTER"];
+    return "<div class=\"zone\" role=\"button\" tabindex=\"0\" data-zone=\"" + id + "\" aria-label=\"Step " + (n + 1) + "\">" +
+      "<header><b>" + (n + 1) + " · " + words[n] + "</b><small>One action</small></header><div class=\"zone-cards\">" +
+      cards.map(function (c) { return renderCard(c, { slim: true, index: 0 }); }).join("") + "</div></div>";
+  }).join("");
+  const out = cardsIn(state.sequence, "out", SEQ).map(function (c) { return renderCard(c, { slim: true, index: 0 }); }).join("");
+  return "<section class=\"panel\"><div class=\"ph\"><b>ACTIONS</b><span>Tom Nguyen · path to a same-day answer</span></div>" +
+    pileHTML(SEQ, state.sequence, null) + "</section><section class=\"panel\"><div class=\"slots\">" + slots +
+    "<div class=\"zone outzone\" role=\"button\" tabindex=\"0\" data-zone=\"out\" aria-label=\"Do not send\">" +
+    "<header><b>DO NOT SEND</b><small>Promises and guesses</small></header><div class=\"zone-cards\">" + out + "</div></div></div></section>";
+}
+
+function boardCurve() {
+  const opts = CURVE.map(function (opt) {
+    let cls = "opt";
+    let tag = "";
+    if (state.review) {
+      if (opt.id === "query") { cls += " good"; tag = "<small>THIS HOLDS</small>"; }
+      else if (opt.id === state.curve) { cls += " bad"; tag = "<small>THIS CREATES REWORK</small>"; }
+    }
+    return "<button class=\"" + cls + "\" type=\"button\" data-curve=\"" + opt.id + "\"" + (state.review ? " disabled" : "") + "><b>" + esc(opt.title) + "</b><span>" + esc(opt.text) + "</span>" + tag + "</button>";
+  }).join("");
+  return "<div class=\"curve\"><div class=\"event\"><p class=\"eyebrow\">INCOMING · OMAR SHAH</p><h2>No pre-approval today.</h2>" +
+    "<p>" + (isFay() ? "A finance broker sent the deal. " : "") + "The review has stopped. Lumi's payout figure does not match the file. Settlement has asked if VOI can start. Omar has heard nothing.</p></div>" +
+    "<div class=\"options\">" + opts + "</div></div>";
+}
+
+function boardComms() {
+  const bank = FRAGMENTS.map(function (f) {
+    const used = state.comms.indexOf(f.id);
+    const on = used !== -1 ? " on" : "";
+    const mark = used !== -1 ? "<small>IN LINE " + (used + 1) + "</small>" : "<small>" + f.beat + "</small>";
+    return "<button class=\"frag" + on + "\" type=\"button\" data-frag=\"" + f.id + "\">" + mark + esc(f.text) + "</button>";
+  }).join("");
+  const lines = [0, 1, 2, 3].map(function (i) {
+    const id = state.comms[i];
+    const frag = id ? cardById(id) : null;
+    const inner = frag ? "<b>" + (i + 1) + " · " + BEATS[i] + "</b><div>" + esc(frag.text) + "</div>" : "<b>" + (i + 1) + " · " + BEATS[i] + "</b><div class=\"hint\">Click a line to fill this beat.</div>";
+    return "<div class=\"slotline\">" + inner + "</div>";
+  }).join("");
+  return "<div class=\"comms\"><section class=\"panel\"><div class=\"ph\"><b>LINES</b><span>Click to add. Click again to remove.</span></div><div class=\"bank\">" + bank + "</div></section>" +
+    "<section class=\"panel\"><div class=\"ph\"><b>TODAY'S CALL</b><span>Omar, in order</span></div><div class=\"msg\">" + lines +
+    "<button class=\"ghost\" type=\"button\" id=\"clearline\">Clear last line</button></div></section></div>";
+}
+
+function canLock() {
+  if (state.phase === "chunk") return Object.keys(state.chunk).length === CHUNK.length;
+  if (state.phase === "priority") return Object.keys(state.priority).length === PRIORITY.length;
+  if (state.phase === "sequence") return Object.keys(state.sequence).length === SEQ.length;
+  if (state.phase === "comms") return state.comms.length === 4;
+  return false;
+}
+function lockLabel() {
+  if (state.phase === "chunk") return canLock() ? "Lock lanes" : "Place all 5";
+  if (state.phase === "priority") return canLock() ? "Lock the matrix" : "Place all 4";
+  if (state.phase === "sequence") return canLock() ? "Lock the order" : "Place all 5";
+  if (state.phase === "comms") return canLock() ? "Send update" : "Choose 4 lines";
+  return "Continue";
+}
+
+function dockFor(result) {
+  const ratio = result.max ? result.points / result.max : 0;
+  const tone = ratio >= 0.8 ? "good" : ratio >= 0.45 ? "mid" : "bad";
+  const problems = result.notes.filter(function (n) { return n.tone !== "good"; });
+  const list = (problems.length ? problems : result.notes).slice(0, 2);
+  const extra = problems.length > 2 ? "<p>The rest is on the debrief.</p>" : "";
+  return "<div class=\"dock " + tone + "\"><div><strong>" + result.points + "/" + result.max + " locked</strong>" +
+    list.map(function (n) { return "<p>" + esc(n.text) + "</p>"; }).join("") + extra +
+    "<p class=\"hint\">Pause if you want to talk this through. The clock stays live.</p></div>" +
+    "<div class=\"btns\"><button class=\"ghost\" type=\"button\" id=\"revise\">Revise</button><button class=\"primary\" type=\"button\" id=\"continue\">Continue</button></div></div>";
+}
+
+function stageHTML() {
+  if (state.phase === "chunk") return boardChunk(scoreChunk());
+  if (state.phase === "priority") return boardPriority(scorePriority());
+  if (state.phase === "sequence") return boardSequence();
+  if (state.phase === "curve") return boardCurve();
+  return boardComms();
+}
+
+function pressureKey() {
+  if (!state.running || state.paused || state.phase === "brief" || state.phase === "debrief" || state.phase === "raid" || state.phase === "raidend") return "ok";
+  const b = bucket(state.remaining);
+  return b === "over" ? "red" : b;
+}
+
+function renderBrief() {
+  const who = me();
+  const speed = state.speed || 1;
+  const speeds = SPEEDS.map(function (s) {
+    const on = speed === s.id ? " on" : "";
+    return "<button type=\"button\" class=\"" + on.trim() + "\" data-speed=\"" + s.id + "\" aria-pressed=\"" + (speed === s.id) + "\"><b>" + s.name + "</b><span>" + s.sub + "</span></button>";
+  }).join("");
+  const roles = ROLES.map(function (r) {
+    const on = state.role === r.id ? " on" : "";
+    return "<button type=\"button\" class=\"" + on.trim() + "\" data-role=\"" + r.id + "\" aria-pressed=\"" + (state.role === r.id) + "\"><b>" + r.name + "</b><span>" + r.kicker + "</span></button>";
+  }).join("");
+  const desk = who
+    ? (isFay() ? "Fay. Finance-broker deals." : who.name + ".")
+    : "Christian, Isabella, Regan, or Fay.";
+  return "<div class=\"screen brief\"><div class=\"hero\">" +
+    "<p class=\"eyebrow\">FUNDSPOT MINDSET · PROPERTY-SECURED BUSINESS LENDING</p>" +
+    "<h1>FUNDING<br><span>UNDER FIRE</span></h1>" +
+    "<p class=\"lede\">Keep the pipeline moving. Don't let urgency replace thinking.</p>" +
+    "<p class=\"quiet\" style=\"margin-top:14px\">Who is on the desk?</p>" +
+    "<div class=\"roles\" role=\"group\" aria-label=\"Choose who you are\">" + roles + "</div>" +
+    "<p class=\"quiet\">" + esc(desk) + "</p>" +
+    "<p class=\"quiet\" style=\"margin-top:14px\">Clock speed</p>" +
+    "<div class=\"roles\" role=\"group\" aria-label=\"Clock speed\">" + speeds + "</div>" +
+    "<div class=\"clockface\"><strong>03:00</strong><div><b>" + (speed === 1 ? "One mission" : speed + "× clock") + "</b><div class=\"quiet\">The same three minutes on the clock. At " + speed + "× it is gone in " + fmt(180 / speed) + " of real time. It flashes, shakes, and sounds harder as it runs. Sound turns the alarm off. Steady turns the motion off.</div></div></div>" +
+    "<div class=\"stamps\">" +
+    "<div class=\"stamp\"><b>01 CHUNK</b><span>Sort the kind of work</span></div>" +
+    "<div class=\"stamp\"><b>02 JUDGE</b><span>Real, fixed, and yours?</span></div>" +
+    "<div class=\"stamp\"><b>03 SEQUENCE</b><span>What has to happen first</span></div>" +
+    "<div class=\"stamp\"><b>04 ADAPT</b><span>The file hits back</span></div>" +
+    "<div class=\"stamp\"><b>05 SAY IT</b><span>The next step, clearly</span></div></div>" +
+    "<div class=\"launch\"><button class=\"primary\" type=\"button\" id=\"start\"" + (who ? "" : " disabled") + " style=\"min-height:54px;padding:0 28px\">" + (who ? "Start as " + esc(who.name) : "Choose who you are") + "</button>" +
+    "<button type=\"button\" id=\"raidstart\" style=\"min-height:54px;padding:0 18px\">30-second raid</button></div>" +
+    "<p class=\"quiet\">No typing. Click a card, then click where it goes. Drag works too.</p>" +
+    "<p class=\"fine\">Exercise files. Not credit advice and not legal advice. A caveat is not a mortgage. A leased or third-party vehicle is not the borrower's security. Outside lenders here are Bizcap, Lumi and Capify.</p></div></div>";
+}
+
+function renderDebrief() {
+  const total = totalScore();
+  const title = state.reason === "time"
+    ? "Time is up"
+    : total >= 85 ? "Clear headed" : total >= 65 ? "Under control" : total >= 40 ? "Noise got in" : "Urgency took the wheel";
+  const lessons = [
+    ["Chunking", "Break the pile into the kind of work it is. A new form, a call, a file in review, and a file ready to settle are different jobs."],
+    ["Urgent vs important", "Do first is a new application, or a settlement item that will cost us or the client, or push the date out. A ringing phone is not that."],
+    ["Sequencing", "Read the file, then ask for what is missing, then submit, then offer. Settlement is not a shortcut."],
+    ["Adapt", "When the figure does not match, the pre-approval stops. The client still hears that today."],
+    ["Communication", "What is happening, why it matters, what you are doing, and the next step."]
+  ];
+  const bars = [
+    ["chunk", "Chunking", 20],
+    ["priority", "Judgement", 30],
+    ["sequence", "Sequencing", 25],
+    ["curve", "Adapt", 15],
+    ["comms", "Communication", 10]
+  ].map(function (row) {
+    const got = scoreOf(row[0]).points;
+    const pct = Math.round((got / row[2]) * 100);
+    return "<div class=\"barrow\"><div>" + row[1] + "</div><div class=\"track\"><i style=\"width:" + pct + "%\"></i></div><div>" + got + "/" + row[2] + "</div></div>";
+  }).join("");
+  const notes = [];
+  ORDER.forEach(function (phase) {
+    scoreOf(phase).notes.forEach(function (n) {
+      if (n.tone !== "good") notes.push(n.text);
+    });
+  });
+  const noteHTML = notes.length
+    ? "<h3>On this run</h3><ul class=\"notes\">" + notes.slice(0, 5).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>"
+    : "<p>Every call matched the facts in front of you.</p>";
+  return "<div class=\"screen debrief\"><div class=\"wrap\">" +
+    "<p class=\"eyebrow\">DEBRIEF · " + esc((me() ? me().name.toUpperCase() + " · " : "") + title.toUpperCase()) + "</p>" +
+    "<div class=\"scoreline\"><div><div class=\"quote\">Don't let urgency replace thinking.</div><div class=\"quote\">Clarity creates action.</div></div>" +
+    "<div class=\"big\">" + total + "<span style=\"font-size:0.4em;color:var(--muted)\">/100</span></div></div>" +
+    "<p class=\"quiet\">Chunk it. Judge the same-day call. Sequence the path. Say the next step.</p>" +
+    "<div class=\"bars\">" + bars + "</div>" +
+    "<div class=\"lessons\">" + lessons.map(function (l) { return "<div class=\"lesson\"><b>" + l[0] + "</b><span class=\"quiet\">" + l[1] + "</span></div>"; }).join("") + "</div>" +
+    "<p class=\"quiet\">Don't let urgency replace thinking. Clarity creates action.</p>" +
+    noteHTML +
+    "<p><b>Break it down. Put it in order. Take the next step.</b></p>" +
+    "<button class=\"primary\" type=\"button\" id=\"again\" style=\"min-height:52px;padding:0 22px\">Play again</button>" +
+    "<p class=\"fine\">Exercise files. Not credit advice and not legal advice. A caveat is not a mortgage. A leased or third-party vehicle is not the borrower's security.</p></div></div>";
+}
+
+function renderPlay() {
+  const idx = ORDER.indexOf(state.phase);
+  const rail = ORDER.map(function (phase, i) {
+    const cls = i === idx ? "on" : i < idx ? "done" : "";
+    return "<span class=\"" + cls + "\">" + PHASE_NAME[phase] + "</span>";
+  }).join("");
+  const key = pressureKey();
+  const selected = state.selected ? cardById(state.selected) : null;
+  const sel = selected ? "<div class=\"sel\">Selected " + esc(selected.ref || selected.title) + " — click where it goes</div>" : "<div class=\"sel\"></div>";
+  const foot = state.review && state.phase !== "curve"
+    ? dockFor(scoreOf(state.phase))
+    : state.review && state.phase === "curve"
+      ? dockFor(scoreCurve())
+      : state.phase === "curve"
+        ? ""
+        : "<div class=\"actionbar\"><div><div class=\"hint\">" + (selected ? "Click a lane, or click the pile to lift it." : "Place every card, then lock.") + "</div></div><button class=\"primary\" type=\"button\" id=\"lock\"" + (canLock() ? "" : " disabled") + ">" + lockLabel() + "</button></div>";
+  return "<div class=\"screen play\">" +
+    "<header class=\"top\"><div class=\"brand\"><small>FUNDSPOT MINDSET" + (me() ? " · " + esc(me().name.toUpperCase()) : "") + ((state.speed || 1) > 1 ? " · " + state.speed + "×" : "") + "</small><div class=\"name\">FUNDING UNDER FIRE</div></div>" +
+    "<div class=\"timerwrap\"><div class=\"timer\" id=\"timer\" role=\"timer\" aria-label=\"Mission time remaining " + fmt(state.remaining) + "\"><b>" + fmt(state.remaining) + "</b><em>" + PRESSURE_WORD[key] + "</em></div></div>" +
+    "<div class=\"controls\">" +
+    "<button type=\"button\" id=\"pause\" aria-label=\"" + (state.paused && !state.confirming ? "Resume mission" : "Pause mission") + "\">" + (state.paused && !state.confirming ? "Resume" : "Pause") + "</button>" +
+    "<button type=\"button\" id=\"sound\" aria-label=\"" + (state.sound ? "Mute sound" : "Unmute sound") + "\">" + (state.sound ? "Sound on" : "Sound") + "</button>" +
+    "<button type=\"button\" id=\"motion\" aria-pressed=\"" + state.reduce + "\" aria-label=\"Toggle motion\">" + (state.reduce ? "Steady" : "Motion") + "</button>" +
+    "<button type=\"button\" id=\"restart\" aria-label=\"Restart mission\">Restart</button></div></header>" +
+    "<div class=\"rail\">" + rail + "<span style=\"margin-left:auto\">SCORE " + banked() + "</span></div>" +
+    "<div class=\"alertstrip\"><div class=\"lights\" aria-hidden=\"true\"><i></i><i></i><i></i></div><span id=\"alerttext\">" + ALERTS[key] + "</span></div>" +
+    "<div class=\"objective\"><p>" + esc(OBJECTIVES[state.phase]) + "</p>" + sel + "</div>" +
+    "<div class=\"stage\">" + stageHTML() + "</div>" + foot +
+    (state.paused && !state.confirming ? "<div class=\"pauseveil\">PAUSED</div>" : "") +
+    "</div>";
+}
+
+function render() {
+  applyChrome();
+  const app = document.getElementById("app");
+  let html;
+  if (state.phase === "brief") html = renderBrief();
+  else if (state.phase === "debrief") html = renderDebrief();
+  else if (state.phase === "raid" || state.phase === "raidend") html = renderRaid();
+  else html = renderPlay();
+  if (state.confirming) {
+    html += "<div class=\"modal\"><div class=\"box\"><h2>Restart the mission?</h2><p class=\"quiet\">This run will end and the clock will clear.</p><div class=\"btns\"><button type=\"button\" id=\"no\">Keep going</button><button class=\"primary\" type=\"button\" id=\"yes\">Restart</button></div></div></div>";
+  }
+  app.innerHTML = html;
+  state.justEntered = false;
+  bind();
+}
+function applyChrome() {
+  const key = pressureKey();
+  document.body.dataset.pressure = key;
+  document.body.dataset.phase = state.phase;
+  document.body.classList.toggle("reduce-motion", !!state.reduce);
+}
+function paintTimer() {
+  const key = pressureKey();
+  document.body.dataset.pressure = key;
+  const timer = document.getElementById("timer");
+  if (!timer) return;
+  const label = fmt(state.remaining);
+  const b = timer.querySelector("b");
+  const em = timer.querySelector("em");
+  if (b && b.textContent !== label) b.textContent = label;
+  if (em) em.textContent = PRESSURE_WORD[key];
+  timer.setAttribute("aria-label", "Mission time remaining " + label);
+  const alert = document.getElementById("alerttext");
+  if (alert && alert.textContent !== ALERTS[key]) {
+    alert.textContent = ALERTS[key];
+    say(ALERTS[key]);
+  }
+}
+
+function bind() {
+  const q = function (sel) { return document.querySelector(sel); };
+  const start = q("#start");
+  if (start) start.addEventListener("click", begin);
+  document.querySelectorAll("[data-role]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      state.role = btn.getAttribute("data-role");
+      say(me().name + " is on the desk.");
+      render();
+    });
+  });
+  document.querySelectorAll("[data-speed]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      state.speed = Number(btn.getAttribute("data-speed")) || 1;
+      say(state.speed === 1 ? "Standard clock." : state.speed + " times clock.");
+      render();
+    });
+  });
+  const raidStart = q("#raidstart");
+  if (raidStart) raidStart.addEventListener("click", beginRaid);
+  const raidAgain = q("#raidagain");
+  if (raidAgain) raidAgain.addEventListener("click", beginRaid);
+  const raidBack = q("#raidback");
+  if (raidBack) raidBack.addEventListener("click", showBrief);
+  if (state.phase === "raid") ensureRaidLoop();
+  const raidCanvas = q("#raid");
+  if (raidCanvas) {
+    const aim = function (e) {
+      const rect = raidCanvas.getBoundingClientRect();
+      if (!rect.width) return;
+      raid.ship = Math.max(0.06, Math.min(0.94, (e.clientX - rect.left) / rect.width));
+    };
+    raidCanvas.addEventListener("pointermove", aim);
+    raidCanvas.addEventListener("pointerdown", function (e) {
+      if (state.paused || raid.cooldown > 0) return;
+      aim(e);
+      const rect = raidCanvas.getBoundingClientRect();
+      raid.bullets.push({ x: raid.ship * rect.width, y: rect.height - 58 });
+      raid.cooldown = 0.28;
+      beep(740, 0.03, 0.03, "square");
+    });
+    raidCanvas.addEventListener("pointerup", function () { raid.keys[" "] = false; });
+    raidCanvas.addEventListener("pointerleave", function () { raid.keys[" "] = false; });
+  }
+  const again = q("#again");
+  if (again) again.addEventListener("click", showBrief);
+  const pause = q("#pause");
+  if (pause) pause.addEventListener("click", togglePause);
+  const sound = q("#sound");
+  if (sound) sound.addEventListener("click", toggleSound);
+  const motion = q("#motion");
+  if (motion) motion.addEventListener("click", toggleMotion);
+  const restart = q("#restart");
+  if (restart) restart.addEventListener("click", askRestart);
+  const yes = q("#yes");
+  if (yes) yes.addEventListener("click", function () { state.confirming = false; showBrief(); });
+  const no = q("#no");
+  if (no) no.addEventListener("click", cancelRestart);
+  const lock = q("#lock");
+  if (lock) lock.addEventListener("click", lockPhase);
+  const cont = q("#continue");
+  if (cont) cont.addEventListener("click", continuePhase);
+  const revise = q("#revise");
+  if (revise) revise.addEventListener("click", revise);
+  const clearline = q("#clearline");
+  if (clearline) clearline.addEventListener("click", function () {
+    if (inputLocked()) return;
+    state.comms.pop();
+    render();
+  });
+  document.querySelectorAll("[data-card]").forEach(bindCard);
+  document.querySelectorAll("[data-zone]").forEach(bindZone);
+  document.querySelectorAll("[data-intel]").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-intel");
+      state.investigated[id] = true;
+      state.openIntel = state.openIntel === id ? null : id;
+      say("Intel opened for " + id);
+      render();
+    });
+  });
+  document.querySelectorAll("[data-curve]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (inputLocked()) return;
+      state.curve = btn.getAttribute("data-curve");
+      state.review = true;
+      beep(520, 0.08, 0.04);
+      say("Call locked");
+      render();
+    });
+  });
+  document.querySelectorAll("[data-frag]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (inputLocked()) return;
+      const id = btn.getAttribute("data-frag");
+      const at = state.comms.indexOf(id);
+      if (at !== -1) state.comms.splice(at, 1);
+      else if (state.comms.length < 4) state.comms.push(id);
+      beep(440, 0.04, 0.03);
+      render();
+    });
+  });
+}
+
+function bindCard(card) {
+  card.addEventListener("pointerdown", function (e) {
+    if (e.button !== 0) return;
+    if (inputLocked()) return;
+    if (e.target.closest("[data-stop]")) return;
+    drag = { id: card.getAttribute("data-card"), x: e.clientX, y: e.clientY, moved: false, el: card, pointerId: e.pointerId };
+    try { card.setPointerCapture(e.pointerId); } catch (err) { /* pointer already released */ }
+  });
+  card.addEventListener("pointerup", function (e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    e.stopPropagation();
+    finishDrag(e);
+  });
+  card.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    if (inputLocked()) return;
+    toggleSelect(card.getAttribute("data-card"));
+  });
+}
+function bindZone(zone) {
+  zone.addEventListener("pointerup", function (e) {
+    if (drag) return;
+    if (inputLocked()) return;
+    if (e.target.closest("[data-card]") || e.target.closest("[data-stop]")) return;
+    if (!state.selected) return;
+    place(state.selected, zone.getAttribute("data-zone"));
+  });
+  zone.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    if (inputLocked() || !state.selected) return;
+    place(state.selected, zone.getAttribute("data-zone"));
+  });
+}
+
+function finishDrag(e) {
+  const d = drag;
+  drag = null;
+  hideGhost();
+  markOver(null);
+  if (d.el) d.el.classList.remove("dragging");
+  if (inputLocked()) return;
+  if (d.moved) {
+    const zone = hitZone(e.clientX, e.clientY);
+    if (zone) place(d.id, zone);
+  } else toggleSelect(d.id);
+}
+function onMove(e) {
+  if (!drag || e.pointerId !== drag.pointerId || inputLocked()) return;
+  if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) {
+    drag.moved = true;
+    drag.el.classList.add("dragging");
+    showGhost(drag.id, e.clientX, e.clientY);
+    markOver(hitZone(e.clientX, e.clientY));
+  }
+}
+function onUp(e) {
+  if (!drag || e.pointerId !== drag.pointerId) return;
+  finishDrag(e);
+}
+function showGhost(id, x, y) {
+  const card = cardById(id);
+  const ghost = document.getElementById("ghost");
+  ghost.hidden = false;
+  ghost.textContent = (card.ref || card.kicker || "") + "  " + card.title;
+  ghost.style.transform = "translate(" + (x + 14) + "px," + (y + 12) + "px)";
+}
+function hideGhost() {
+  const ghost = document.getElementById("ghost");
+  ghost.hidden = true;
+}
+function hitZone(x, y) {
+  const stack = document.elementsFromPoint(x, y);
+  for (let i = 0; i < stack.length; i++) {
+    const z = stack[i].closest && stack[i].closest("[data-zone]");
+    if (z) return z.getAttribute("data-zone");
+  }
+  return null;
+}
+function markOver(zone) {
+  document.querySelectorAll("[data-zone]").forEach(function (z) {
+    z.classList.toggle("over", z.getAttribute("data-zone") === zone);
+  });
+}
+function toggleSelect(id) {
+  state.selected = state.selected === id ? null : id;
+  render();
+}
+function place(id, zone) {
+  if (inputLocked()) return;
+  const map = currentMap();
+  if (!map) return;
+  if (zone === "tray") {
+    delete map[id];
+  } else {
+    const single = state.phase === "sequence" && zone !== "out";
+    if (single) {
+      const occupant = Object.keys(map).find(function (k) { return map[k] === zone && k !== id; });
+      const prev = map[id];
+      if (occupant) {
+        if (prev) map[occupant] = prev;
+        else delete map[occupant];
+      }
+    }
+    map[id] = zone;
+  }
+  state.selected = null;
+  beep(480, 0.04, 0.03);
+  render();
+}
+
+function begin() {
+  if (!state.role) return;
+  const role = state.role;
+  const speed = state.speed || 1;
+  cancelAnimationFrame(loop);
+  raidLoopOn = false;
+  fresh();
+  state.role = role;
+  state.speed = speed;
+  applyDesk();
+  state.phase = "chunk";
+  state.reached.chunk = true;
+  state.justEntered = true;
+  state.running = true;
+  state.sound = true;
+  state.startedAt = Date.now();
+  state.remaining = GAME;
+  alarmAt = 0;
+  say("Mission started. Three minutes.");
+  render();
+  cancelAnimationFrame(loop);
+  const tick = function () {
+    if (!state.running) return;
+    const rem = Math.max(0, GAME - elapsedMs() / 1000);
+    state.remaining = rem;
+    paintTimer();
+    alarm(rem);
+    if (rem <= 0) {
+      timeUp();
+      return;
+    }
+    loop = requestAnimationFrame(tick);
+  };
+  loop = requestAnimationFrame(tick);
+}
+function timeUp() {
+  state.running = false;
+  state.remaining = 0;
+  state.reason = "time";
+  state.phase = "debrief";
+  state.paused = false;
+  state.confirming = false;
+  state.review = false;
+  hideGhost();
+  say("Time is up.");
+  beep(220, 0.35, 0.09, "square");
+  beep(160, 0.45, 0.08, "square", 0.2);
+  render();
+}
+function showBrief() {
+  state.running = false;
+  cancelAnimationFrame(loop);
+  raidLoopOn = false;
+  fresh();
+  hideGhost();
+  render();
+}
+function togglePause() {
+  if (state.phase === "brief" || state.phase === "debrief" || state.confirming) return;
+  if (!state.paused) {
+    state.paused = true;
+    state.pauseStarted = Date.now();
+    say("Paused");
+  } else {
+    state.pausedAccum += Date.now() - state.pauseStarted;
+    state.paused = false;
+    say("Resumed");
+  }
+  render();
+}
+function toggleSound() {
+  state.sound = !state.sound;
+  if (state.sound) beep(660, 0.06, 0.04);
+  render();
+}
+function toggleMotion() {
+  state.reduce = !state.reduce;
+  render();
+}
+function askRestart() {
+  if (state.phase === "brief") return;
+  if (state.phase === "debrief") { showBrief(); return; }
+  state.pausedForModal = state.paused;
+  if (!state.paused) {
+    state.paused = true;
+    state.pauseStarted = Date.now();
+  }
+  state.confirming = true;
+  render();
+}
+function cancelRestart() {
+  state.confirming = false;
+  if (!state.pausedForModal) {
+    state.pausedAccum += Date.now() - state.pauseStarted;
+    state.paused = false;
+  }
+  render();
+}
+function lockPhase() {
+  if (!canLock() || inputLocked()) return;
+  state.review = true;
+  state.selected = null;
+  beep(540, 0.07, 0.04);
+  const result = scoreOf(state.phase);
+  say(result.points + " of " + result.max);
+  render();
+}
+function revise() {
+  state.review = false;
+  if (state.phase === "curve") state.curve = null;
+  render();
+}
+function continuePhase() {
+  const i = ORDER.indexOf(state.phase);
+  state.review = false;
+  state.selected = null;
+  state.openIntel = null;
+  if (i === -1 || i === ORDER.length - 1) {
+    state.running = false;
+    state.reason = "clear";
+    state.phase = "debrief";
+    say("Mission complete. " + totalScore() + " of 100.");
+    beep(660, 0.08, 0.04);
+    render();
+    return;
+  }
+  state.phase = ORDER[i + 1];
+  state.reached[state.phase] = true;
+  state.justEntered = true;
+  say(PHASE_NAME[state.phase]);
+  render();
+}
+function onKey(e) {
+  if (state.phase === "raid") {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === " ") {
+      e.preventDefault();
+      raid.keys[e.key] = true;
+    }
+  }
+  if (e.key === "p" || e.key === "P") togglePause();
+  if (e.key === "m" || e.key === "M") toggleSound();
+  if (e.key === "Escape" && state.confirming) cancelRestart();
+}
+function onKeyUp(e) {
+  if (raid.keys) raid.keys[e.key] = false;
+}
+
+function resetRaid() {
+  raid.left = 30;
+  raid.score = 0;
+  raid.hits = 0;
+  raid.wrong = 0;
+  raid.missed = 0;
+  raid.ignored = 0;
+  raid.ship = 0.5;
+  raid.keys = {};
+  raid.bullets = [];
+  raid.cooldown = 0;
+  raid.banner = "Shoot urgent and important. Leave the rest.";
+  raid.bannerT = 2;
+  raid.last = 0;
+  raid.wave = 0;
+  raidWave();
+}
+function raidWave() {
+  const cols = 6;
+  const rows = 3;
+  const cells = [];
+  raid.wave += 1;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const shoot = (r + c + raid.wave) % 2 === 0;
+      const pool = shoot ? RAID_SHOOT : RAID_LEAVE;
+      cells.push({ c: c, r: r, text: pool[(r * cols + c + raid.wave) % pool.length], shoot: shoot, alive: true });
+    }
+  }
+  raid.form = { x: 16, y: 12, dir: 1, cols: cols, rows: rows, cells: cells };
+}
+function raidLayout(w) {
+  const gapX = 8;
+  const gapY = 8;
+  const fit = Math.floor((w - 24 - gapX * (raid.form.cols - 1)) / raid.form.cols);
+  const cellW = Math.max(48, fit);
+  return { cellW: cellW, cellH: cellW < 110 ? 36 : 42, gapX: gapX, gapY: gapY };
+}
+function raidRects(w) {
+  const box = raidLayout(w);
+  const form = raid.form;
+  return form.cells.filter(function (cell) { return cell.alive; }).map(function (cell) {
+    return {
+      cell: cell,
+      x: form.x + cell.c * (box.cellW + box.gapX),
+      y: form.y + cell.r * (box.cellH + box.gapY),
+      w: box.cellW,
+      h: box.cellH
+    };
+  });
+}
+function renderRaid() {
+  if (state.phase === "raidend") {
+    return "<div class=\"screen debrief\"><div class=\"wrap\">" +
+      "<p class=\"eyebrow\">30-SECOND RAID</p>" +
+      "<h2>Time.</h2>" +
+      "<div class=\"scoreline\"><div></div><div class=\"big\">" + raid.score + "</div></div>" +
+      "<p>Urgent and important hit: " + raid.hits + ". Left alone, correctly: " + raid.ignored + ".</p>" +
+      "<p>Shot something that was not both: " + raid.wrong + ". Let an urgent and important one land: " + raid.missed + ".</p>" +
+      "<p class=\"quiet\">Shoot a new application, or a settlement item that will cost money or slip the date. Leave the ringing phone and the rate sheet.</p>" +
+      "<div class=\"launch\"><button class=\"primary\" type=\"button\" id=\"raidagain\" style=\"min-height:52px;padding:0 22px\">Run it again</button>" +
+      "<button type=\"button\" id=\"raidback\" style=\"min-height:52px\">Back to the desk</button></div></div></div>";
+  }
+  return "<div class=\"screen play\">" +
+    "<header class=\"top\"><div class=\"brand\"><small>URGENT AND IMPORTANT ONLY</small><div class=\"name\">30-SECOND RAID</div></div>" +
+    "<div class=\"timerwrap\"><div class=\"timer\" id=\"raidtimer\" role=\"timer\"><b>" + fmt(raid.left || 30) + "</b><em>RAID</em></div></div>" +
+    "<div class=\"controls\"><button type=\"button\" id=\"pause\">" + (state.paused ? "Resume" : "Pause") + "</button>" +
+    "<button type=\"button\" id=\"sound\">" + (state.sound ? "Sound on" : "Sound") + "</button>" +
+    "<button type=\"button\" id=\"restart\">Restart</button></div></header>" +
+    "<div class=\"objective\"><p>Shoot only what is urgent and important. Leave everything else. Arrows or mouse to move. Space or click to fire.</p><div class=\"sel\">SCORE " + (raid.score || 0) + "</div></div>" +
+    "<div class=\"raid-stage\"><canvas id=\"raid\" aria-label=\"Shoot urgent and important tasks\"></canvas><p class=\"raidflash\" id=\"raidflash\"></p></div>" +
+    (state.paused && !state.confirming ? "<div class=\"pauseveil\">PAUSED</div>" : "") +
+    "</div>";
+}
+function beginRaid() {
+  cancelAnimationFrame(loop);
+  raidLoopOn = false;
+  state.phase = "raid";
+  state.running = true;
+  state.paused = false;
+  state.confirming = false;
+  state.review = false;
+  resetRaid();
+  say("Thirty seconds. Shoot only urgent and important.");
+  render();
+  ensureRaidLoop();
+}
+function ensureRaidLoop() {
+  if (raidLoopOn || state.phase !== "raid") return;
+  raidLoopOn = true;
+  const frame = function (now) {
+    if (state.phase !== "raid") {
+      raidLoopOn = false;
+      return;
+    }
+    stepRaid(now);
+    loop = requestAnimationFrame(frame);
+  };
+  loop = requestAnimationFrame(frame);
+}
+function stepRaid(now) {
+  const canvas = document.getElementById("raid");
+  if (!canvas) return;
+  const stage = canvas.parentElement;
+  const w = Math.max(320, Math.floor(stage.clientWidth));
+  const h = Math.max(240, Math.floor(stage.clientHeight));
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
+  if (!raid.last) raid.last = now;
+  let dt = Math.min(0.05, (now - raid.last) / 1000);
+  raid.last = now;
+  if (state.paused || state.confirming) dt = 0;
+  raid.left = Math.max(0, raid.left - dt);
+  const timer = document.getElementById("raidtimer");
+  if (timer) {
+    const b = timer.querySelector("b");
+    if (b) b.textContent = fmt(raid.left);
+  }
+  const scoreEl = document.querySelector(".objective .sel");
+  if (scoreEl) scoreEl.textContent = "SCORE " + raid.score;
+  if (raid.left <= 0 && dt > 0) {
+    state.running = false;
+    state.phase = "raidend";
+    state.paused = false;
+    say("Time. Score " + raid.score);
+    render();
+    return;
+  }
+  if (raid.keys.ArrowLeft) raid.ship -= dt * 0.85;
+  if (raid.keys.ArrowRight) raid.ship += dt * 0.85;
+  raid.ship = Math.max(0.06, Math.min(0.94, raid.ship));
+  raid.cooldown = Math.max(0, raid.cooldown - dt);
+  if (raid.keys[" "] && raid.cooldown <= 0 && dt > 0) {
+    raid.bullets.push({ x: raid.ship * w, y: h - 58 });
+    raid.cooldown = 0.28;
+    beep(740, 0.03, 0.03, "square");
+  }
+  raid.bullets.forEach(function (bullet) { bullet.y -= 560 * dt; });
+  raid.bullets = raid.bullets.filter(function (bullet) { return bullet.y > -10; });
+  const box = raidLayout(w);
+  const span = raid.form.cols * (box.cellW + box.gapX);
+  raid.form.x += raid.form.dir * (78 + raid.wave * 18) * dt;
+  if (raid.form.x < 8) {
+    raid.form.x = 8;
+    raid.form.dir = 1;
+    raid.form.y += 18;
+  } else if (raid.form.x + span > w - 8) {
+    raid.form.x = w - 8 - span;
+    raid.form.dir = -1;
+    raid.form.y += 18;
+  }
+  const floor = h - 78;
+  raidRects(w).forEach(function (rect) {
+    if (rect.y + rect.h < floor) return;
+    rect.cell.alive = false;
+    if (rect.cell.shoot) {
+      raid.missed += 1;
+      raid.score -= 100;
+      raid.banner = "That one had to be shot.";
+    } else {
+      raid.ignored += 1;
+      raid.score += 25;
+      raid.banner = "Left it. Correct.";
+    }
+    raid.bannerT = 0.8;
+  });
+  raid.bullets.forEach(function (bullet) {
+    if (bullet.dead) return;
+    raidRects(w).forEach(function (rect) {
+      if (bullet.dead || !rect.cell.alive) return;
+      if (bullet.x < rect.x || bullet.x > rect.x + rect.w || bullet.y < rect.y || bullet.y > rect.y + rect.h) return;
+      bullet.dead = true;
+      rect.cell.alive = false;
+      if (rect.cell.shoot) {
+        raid.hits += 1;
+        raid.score += 100;
+        raid.banner = "Urgent and important.";
+        beep(660, 0.05, 0.04);
+      } else {
+        raid.wrong += 1;
+        raid.score -= 75;
+        raid.banner = "Leave that one.";
+        beep(180, 0.08, 0.05, "square");
+      }
+      raid.bannerT = 0.8;
+    });
+  });
+  raid.bullets = raid.bullets.filter(function (bullet) { return !bullet.dead; });
+  if (!raid.form.cells.some(function (cell) { return cell.alive; })) raidWave();
+  raid.bannerT = Math.max(0, raid.bannerT - dt);
+  const flash = document.getElementById("raidflash");
+  if (flash) flash.textContent = raid.bannerT > 0 ? raid.banner : "";
+  drawRaid(canvas, w, h);
+}
+function drawRaid(canvas, w, h) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#07111c";
+  ctx.fillRect(0, 0, w, h);
+  const shipX = raid.ship * w;
+  ctx.fillStyle = "#5ce1ff";
+  ctx.beginPath();
+  ctx.moveTo(shipX, h - 64);
+  ctx.lineTo(shipX - 16, h - 40);
+  ctx.lineTo(shipX + 16, h - 40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#ffc14d";
+  raid.bullets.forEach(function (bullet) {
+    ctx.fillRect(bullet.x - 2, bullet.y, 4, 12);
+  });
+  ctx.font = "12px Bahnschrift, Segoe UI, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  raidRects(w).forEach(function (rect) {
+    ctx.fillStyle = "rgba(8, 22, 38, 0.94)";
+    ctx.strokeStyle = "rgba(140, 196, 255, 0.55)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#e8f3ff";
+    const words = rect.cell.text.split(" ");
+    if (words.length > 2) {
+      ctx.fillText(words.slice(0, 2).join(" "), rect.x + rect.w / 2, rect.y + rect.h / 2 - 7);
+      ctx.fillText(words.slice(2).join(" "), rect.x + rect.w / 2, rect.y + rect.h / 2 + 8);
+    } else {
+      ctx.fillText(rect.cell.text, rect.x + rect.w / 2, rect.y + rect.h / 2);
+    }
+  });
+}
+
+document.addEventListener("pointermove", onMove);
+document.addEventListener("pointerup", onUp);
+document.addEventListener("pointercancel", onUp);
+document.addEventListener("keydown", onKey);
+document.addEventListener("keyup", onKeyUp);
+fresh();
+render();
+</script>
+</body>
+</html>
